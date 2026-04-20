@@ -82,7 +82,12 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
       rand -= p.weight;
     }
 
-    setIframeHtml(buildAdIframeHtml(selected.code));
+    // Fix for cascading render warning: schedule it asynchronously
+    const timer = setTimeout(() => {
+      setIframeHtml(buildAdIframeHtml(selected.code));
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [isVisible, providers, iframeHtml]);
 
   const defaultHeight = () => {
