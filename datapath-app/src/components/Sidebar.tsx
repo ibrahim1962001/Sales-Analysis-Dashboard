@@ -14,6 +14,8 @@ interface Props {
   onLang: () => void;
   onClose: () => void;
   onOpenEditor: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 const T = {
@@ -29,10 +31,15 @@ const navItems = [
   { tab: 'export' as Tab, icon: Download, keyAr: 'export', keyEn: 'export' },
 ];
 
-export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onOpenEditor }) => {
+export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onOpenEditor, isMobileOpen, onCloseMobile }) => {
   const t = T[lang];
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
+      {/* زر إغلاق القائمة في الموبايل */}
+      <button className="mobile-close-btn" onClick={onCloseMobile}>
+        <X size={28} />
+      </button>
+
       <div className="sidebar-logo" style={{ padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
         <img 
           src="/logo.png" 

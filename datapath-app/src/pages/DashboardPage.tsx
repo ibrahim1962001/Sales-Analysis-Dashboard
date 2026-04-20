@@ -209,6 +209,16 @@ export const DashboardPage: React.FC<Props> = ({ info, lang }) => {
         ))}
       </div>
 
+      {/* Middle Banner Ad between KPIs and Charts */}
+      <div className="dashboard-ad-top" style={{ marginTop: 15, marginBottom: 5 }}>
+        <AdSpace
+          type="responsive"
+          providers={AD_PROVIDERS.filter(p => p.id === 'adsterra_main')}
+          minHeight={90}
+          lazyLoad
+        />
+      </div>
+
       <div className="dash-layout">
         {/* Charts grid */}
         <div className="charts-section">

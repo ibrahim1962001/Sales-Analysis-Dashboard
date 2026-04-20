@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -17,6 +18,7 @@ function App() {
   const [tab, setTab] = useState<Tab>('home');
   const [dataset, setDataset] = useState<DatasetInfo | null>(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadMsg, setLoadMsg] = useState('');
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
@@ -60,7 +62,22 @@ function App() {
 
   return (
     <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
-      <Sidebar tab={tab} lang={lang} hasData={!!dataset} onTab={setTab} onLang={toggleLang} onClose={handleClose} onOpenEditor={() => setSidePanelOpen(true)} />
+      {/* Mobile Menu Button */}
+      <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}>
+        <Menu size={24} />
+      </button>
+
+      <Sidebar 
+        tab={tab} 
+        lang={lang} 
+        hasData={!!dataset} 
+        onTab={(t) => { setTab(t); setMobileMenuOpen(false); }} 
+        onLang={toggleLang} 
+        onClose={handleClose} 
+        onOpenEditor={() => { setSidePanelOpen(true); setMobileMenuOpen(false); }} 
+        isMobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
+      />
 
       <main className="main flex-1 flex flex-col min-h-full">
         {loading && (

@@ -118,7 +118,6 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
       {iframeHtml ? (
         <iframe
           srcDoc={iframeHtml}
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
           style={{
             width: '100%',
             height: `${height}px`,
@@ -127,6 +126,7 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
           }}
           title="Advertisement"
           loading="lazy"
+          scrolling="no"
         />
       ) : isVisible ? (
         /* spinner بينما يُحمَّل */
