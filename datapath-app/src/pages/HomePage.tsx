@@ -71,7 +71,7 @@ export const HomePage: React.FC<Props> = ({ lang, onFile }) => {
       <div className="home-hero">
         <div className="home-logo-container">
           <img src={logoImg} alt="Kemet Logo" className="home-logo" />
-          <span className="home-site-name">Kemet AI Studio</span>
+          <span className="home-site-name">Kimit AI Studio</span>
         </div>
         <div className="hero-badge">{t.badge}</div>
         <h1 className="hero-title">

@@ -5,9 +5,9 @@ import type { AdProvider } from '../components/AdSpace';
  * Weight: نسبة الظهور (كلما زادت زادت فرصة الظهور)
  * Enabled: تفعيل/تعطيل الإعلان
  */
-// كود الإعلان الوحيد المؤكد - يستخدم في جميع البانرات
-const WORKING_AD_CODE = `<script async="async" data-cfasync="false" src="https://pl29177405.profitablecpmratenetwork.com/1a777b2003bc5c410fd28c0bb40954b1/invoke.js"></script>
-<div id="container-1a777b2003bc5c410fd28c0bb40954b1"></div>`;
+// كود الإعلان الصحيح - يستخدم في جميع البانرات
+const WORKING_AD_CODE = `<script async="async" data-cfasync="false" src="https://pl29178744.profitablecpmratenetwork.com/800d5e90b5b2e1db5b501b1508428e31/invoke.js"></script>
+<div id="container-800d5e90b5b2e1db5b501b1508428e31"></div>`;
 
 export const AD_PROVIDERS: AdProvider[] = [
   {

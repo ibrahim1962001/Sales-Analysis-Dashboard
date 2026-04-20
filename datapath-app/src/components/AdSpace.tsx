@@ -82,9 +82,9 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
     }
 
     // استبدال id الحاوية لتفادي التعارض بين نسخ متعددة على نفس الصفحة
-    const uniqueId = `adsterra-container-${instanceId}`;
+    const uniqueId = `ad-container-${instanceId}`;
     const adCode = selectedProvider.code.replace(
-      /id="container-[^"]+"/g,
+      /id="container-[^"]*"/g,
       `id="${uniqueId}"`
     );
 
