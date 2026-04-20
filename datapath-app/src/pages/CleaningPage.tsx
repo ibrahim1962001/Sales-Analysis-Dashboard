@@ -163,7 +163,7 @@ export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate })
           </tbody>
         </table>
       </div>
-      <div style={{ marginTop: 20, textAlign: 'center', opacity: 0.5, fontSize: 12 }}>KEMET AI © 2026 - IBRAHIM SABREY</div>
+      <div style={{ marginTop: 20, textAlign: 'center', opacity: 0.5, fontSize: 12 }}>Kimit AI © 2026 - IBRAHIM SABREY</div>
     </div>
   );
 };

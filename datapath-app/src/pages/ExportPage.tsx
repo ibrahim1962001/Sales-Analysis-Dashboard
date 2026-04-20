@@ -53,8 +53,8 @@ export const ExportPage: React.FC<Props> = ({ info, lang }) => {
         <div className="export-card json" onClick={() => {
             const ws = XLSX.utils.json_to_sheet(info.workData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Kemet Data");
-            XLSX.writeFile(wb, info.filename.replace(/\.[^/.]+$/, "") + "_kemet.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Kimit Data");
+            XLSX.writeFile(wb, info.filename.replace(/\.[^/.]+$/, "") + "_kimit.xlsx");
         }}>
           <div className="export-card-icon"><FileSpreadsheet size={28} /></div>
           <div className="export-card-title">{t.xlsxTitle}</div>

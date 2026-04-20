@@ -139,7 +139,7 @@ export const DashboardPage: React.FC<Props> = ({ info, lang }) => {
       <div className={`dashboard-header ${presentationMode ? 'presentation-mode' : ''}`}>
         <div className="title-group">
           <h2 className="page-title">{t.title}</h2>
-          <p className="page-sub">Kemet Analytics · {info.filename}</p>
+          <p className="page-sub">Kimit Analytics · {info.filename}</p>
         </div>
         <div className="actions-group">
           <div className="theme-picker">

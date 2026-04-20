@@ -11,8 +11,8 @@ interface Props { lang: Lang; onFile: (f: File) => void; }
 const T = {
   ar: {
     badge: '✨ يعمل بالكامل في المتصفح',
-    title: 'Kemet\nمنصة التحليل الذكية',
-    sub: 'منصة Kemet تحلل بياناتك فوراً، تكتشف الأنماط، وتجيب على أسئلتك باستخدام أحدث تقنيات الذكاء الاصطناعي.',
+    title: 'Kimit\nمنصة التحليل الذكية',
+    sub: 'منصة Kimit تحلل بياناتك فوراً، تكتشف الأنماط، وتجيب على أسئلتك باستخدام أحدث تقنيات الذكاء الاصطناعي.',
     features: [
       { icon: BarChart2, title: 'رسوم بيانية تفاعلية', desc: 'Line، Bar، Area، Pie — تحليل بصري فوري' },
       { icon: Search, title: 'كشف القيم الشاذة', desc: 'خوارزمية Z-Score تكشف البيانات غير الطبيعية' },
@@ -34,8 +34,8 @@ const T = {
   },
   en: {
     badge: '✨ Fully browser-based',
-    title: 'Kemet\nSmart Analytics',
-    sub: 'Kemet Platform analyzes your data instantly, discovers patterns, and answers any question using the latest AI.',
+    title: 'Kimit\nSmart Analytics',
+    sub: 'Kimit Platform analyzes your data instantly, discovers patterns, and answers any question using the latest AI.',
     features: [
       { icon: BarChart2, title: 'Interactive Charts', desc: 'Line, Bar, Area, Pie — instant visual analysis' },
       { icon: Search, title: 'Anomaly Detection', desc: 'Z-Score algorithm finds abnormal data' },
@@ -70,7 +70,7 @@ export const HomePage: React.FC<Props> = ({ lang, onFile }) => {
     <div className="home-page">
       <div className="home-hero">
         <div className="home-logo-container">
-          <img src={logoImg} alt="Kemet Logo" className="home-logo" />
+          <img src={logoImg} alt="Kimit Logo" className="home-logo" />
           <span className="home-site-name">Kimit AI Studio</span>
         </div>
         <div className="hero-badge">{t.badge}</div>
