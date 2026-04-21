@@ -130,6 +130,15 @@ export const HomePage: React.FC<Props> = ({ lang, onFile }) => {
           <p>
             {t.creator} <strong>IBRAHIM SABREY</strong>
           </p>
+          <div className="flex justify-center gap-4 mt-3 text-xs opacity-60">
+            <a href="mailto:ebrahimsabrey2001@gmail.com" className="hover:text-primary transition-colors flex items-center gap-1">
+              ebrahimsabrey2001@gmail.com
+            </a>
+            <span className="text-white/20">|</span>
+            <a href="https://www.linkedin.com/in/ibrahimsabrey?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+              LinkedIn
+            </a>
+          </div>
         </div>
       </div>
     </div>

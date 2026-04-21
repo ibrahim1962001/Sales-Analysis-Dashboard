@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { AdSpace } from '../components/AdSpace';
 import { AD_PROVIDERS } from '../config/adConfig';
+import { DataPreview } from '../components/DataPreview';
 
 interface Props { info: DatasetInfo; lang: Lang; }
 
@@ -188,6 +189,11 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
             providers={topAdProvider}
             minHeight={90}
           />
+        </div>
+        
+        {/* Quick Preview Section */}
+        <div className="dashboard-preview-section" style={{ padding: '0 20px', marginBottom: '20px' }}>
+          <DataPreview data={info.workData} lang={lang} />
         </div>
 
         {/* Live Slicers Bar */}

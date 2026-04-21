@@ -1,10 +1,10 @@
 import React from 'react';
-import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table } from 'lucide-react';
+import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft } from 'lucide-react';
 import { AdSpace } from './AdSpace';
 import { getActiveAdProviders } from '../config/adConfig';
 import type { Lang } from '../types';
 
-type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export';
+type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare';
 
 interface Props {
   tab: Tab;
@@ -19,74 +19,109 @@ interface Props {
 }
 
 const T = {
-  ar: { home: 'الرئيسية', dashboard: 'التحليل', cleaning: 'التنقية', chat: 'المستشار', export: 'تصدير', close: 'إغلاق الملف' },
-  en: { home: 'Home', dashboard: 'Analytics', cleaning: 'Cleaning', chat: 'AI Chat', export: 'Export', close: 'Close File' },
+  ar: { 
+    home: 'الرئيسية', 
+    dashboard: 'التحليل', 
+    cleaning: 'التنقية', 
+    chat: 'المستشار', 
+    export: 'تصدير', 
+    close: 'إغلاق الملف',
+    about: 'من نحن',
+    privacy: 'الخصوصية',
+    faq: 'الأسئلة الشائعة',
+    guide: 'الدليل',
+    compare: 'مقارنة ملفين'
+  },
+  en: { 
+    home: 'Home', 
+    dashboard: 'Analytics', 
+    cleaning: 'Cleaning', 
+    chat: 'AI Chat', 
+    export: 'Export', 
+    close: 'Close File',
+    about: 'About Us',
+    privacy: 'Privacy',
+    faq: 'FAQ',
+    guide: 'User Guide',
+    compare: 'Compare Files'
+  },
 };
 
-const navItems = [
-  { tab: 'home' as Tab, icon: Home, keyAr: 'home', keyEn: 'home' },
-  { tab: 'dashboard' as Tab, icon: LayoutDashboard, keyAr: 'dashboard', keyEn: 'dashboard' },
-  { tab: 'cleaning' as Tab, icon: Shield, keyAr: 'cleaning', keyEn: 'cleaning' },
-  { tab: 'chat' as Tab, icon: MessageCircle, keyAr: 'chat', keyEn: 'chat' },
-  { tab: 'export' as Tab, icon: Download, keyAr: 'export', keyEn: 'export' },
+const mainItems: { tab: Tab; icon: any; key: string }[] = [
+  { tab: 'home', icon: Home, key: 'home' },
+  { tab: 'dashboard', icon: LayoutDashboard, key: 'dashboard' },
+  { tab: 'cleaning', icon: Shield, key: 'cleaning' },
+  { tab: 'chat', icon: MessageCircle, key: 'chat' },
+  { tab: 'compare', icon: ArrowRightLeft, key: 'compare' },
+  { tab: 'export', icon: Download, key: 'export' },
+];
+
+const supportItems: { tab: Tab; icon: any; key: string }[] = [
+  { tab: 'guide', icon: BookOpen, key: 'guide' },
+  { tab: 'faq', icon: HelpCircle, key: 'faq' },
+  { tab: 'about', icon: Info, key: 'about' },
+  { tab: 'privacy', icon: ShieldCheck, key: 'privacy' },
 ];
 
 export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onOpenEditor, isMobileOpen, onCloseMobile }) => {
   const t = T[lang];
+  const isAr = lang === 'ar';
+
+  const renderBtn = (item: { tab: Tab; icon: any; key: string }) => {
+    const Icon = item.icon;
+    const label = t[item.key as keyof typeof t];
+    const dataNeeded = ['dashboard', 'cleaning', 'export'].includes(item.tab);
+    const disabled = dataNeeded && !hasData;
+    
+    return (
+      <button
+        key={item.tab}
+        className={`nav-btn ${tab === item.tab ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+        onClick={() => !disabled && onTab(item.tab)}
+        title={disabled ? (isAr ? 'ارفع ملف أولاً' : 'Upload a file first') : ''}
+      >
+        <Icon size={18} strokeWidth={2} />
+        <span className="nav-label">{label}</span>
+      </button>
+    );
+  };
+
   return (
     <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
-      {/* زر إغلاق القائمة في الموبايل */}
       <button className="mobile-close-btn" onClick={onCloseMobile}>
         <X size={28} />
       </button>
 
-      <div className="sidebar-logo" style={{ padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ width: '100%', height: '70px', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+      <div className="sidebar-logo">
+        <div className="logo-img-wrapper">
           <img 
             src="/logo.png" 
             alt="Kimit Logo" 
-            style={{ width: '100px', height: '100px', objectFit: 'cover', objectPosition: 'top', mixBlendMode: 'screen' }} 
-            onError={(e) => {
-               (e.target as HTMLImageElement).src = "https://img.icons8.com/clouds/200/egyptian-pyramids.png";
-            }}
+            className="logo-img"
+            onError={(e) => { (e.target as HTMLImageElement).src = "https://img.icons8.com/clouds/200/egyptian-pyramids.png"; }}
           />
         </div>
-        <span style={{ 
-          fontSize: '18px', 
-          fontWeight: 900, 
-          letterSpacing: '-0.5px',
-          background: 'linear-gradient(135deg, #fff 30%, #10b981 100%)', 
-          WebkitBackgroundClip: 'text', 
-          WebkitTextFillColor: 'transparent',
-          marginTop: '2px'
-        }}>
-          Kimit AI Studio
-        </span>
+        <span className="site-name">Kimit AI Studio</span>
       </div>
 
       <nav className="sidebar-nav">
-        {navItems.map(({ tab: tabId, icon: Icon, keyAr }) => {
-          const label = t[keyAr as keyof typeof t];
-          const disabled = tabId !== 'home' && !hasData;
-          return (
-            <button
-              key={tabId}
-              className={`nav-btn ${tab === tabId ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
-              onClick={() => !disabled && onTab(tabId)}
-              title={disabled ? (lang === 'ar' ? 'ارفع ملف أولاً' : 'Upload a file first') : ''}
-            >
-              <Icon size={20} strokeWidth={2} />
-              <span className="nav-label">{label}</span>
-            </button>
-          );
-        })}
+        <div className="nav-section">
+          {mainItems.map(renderBtn)}
+        </div>
 
         {hasData && (
-          <button className="nav-btn" style={{ marginTop: 24, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }} onClick={onOpenEditor}>
+          <button className="excel-btn" onClick={onOpenEditor}>
             <Table size={19} strokeWidth={1.8} />
-            <span className="nav-label">{lang === 'ar' ? 'جدول الإكسيل' : 'Excel Editor'}</span>
+            <span className="nav-label">{isAr ? 'جدول الإكسيل' : 'Excel Editor'}</span>
           </button>
         )}
+
+        <div className="nav-divider" />
+        
+        <div className="nav-section">
+          <p className="section-title">{isAr ? 'الدعم والمعلومات' : 'Support & Info'}</p>
+          {supportItems.map(renderBtn)}
+        </div>
       </nav>
 
       <div className="sidebar-footer">
@@ -98,18 +133,14 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
         )}
         <button className="lang-toggle" onClick={onLang}>
           <Globe size={15} />
-          <span>{lang === 'ar' ? 'English' : 'عربي'}</span>
+          <span>{isAr ? 'English' : 'عربي'}</span>
         </button>
 
-        {/* Ad Space - Sidebar */}
-        <div style={{ padding: '10px 0', marginTop: 'auto' }}>
-          <AdSpace
-            type="responsive"
-            providers={getActiveAdProviders()}
-            minHeight={120}
-          />
+        <div className="sidebar-ad">
+          <AdSpace type="responsive" providers={getActiveAdProviders()} minHeight={100} />
         </div>
       </div>
     </aside>
   );
 };
+
