@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -16,7 +16,7 @@ import { parseFile, analyzeDataset, cleanDataset } from './lib/dataUtils';
 import type { DatasetInfo, Lang } from './types';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { AuthModal } from './components/AuthModal';
+// AuthModal removed — login is now optional via LoginPopup
 import { LoginPopup } from './components/LoginPopup';
 import './App.css';
 
@@ -34,13 +34,11 @@ function App() {
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
 
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [authChecking, setAuthChecking] = useState(true);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      setAuthChecking(false);
     });
     return () => unsub();
   }, []);
@@ -108,27 +106,8 @@ function App() {
   const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar');
   
 
-  if (authChecking) {
-    return (
-      <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative ai-center-load`}>
-         <Loader2 size={36} className="spin" style={{ color: '#818cf8', margin: 'auto' }} />
-         <style>{`.ai-center-load { justify-content: center; align-items: center; background: #020617; } .spin { animation: auth-spin-anim 0.8s linear infinite; } @keyframes auth-spin-anim { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
-        <AuthModal 
-          isOpen={true} 
-          onClose={() => {}} 
-          onSuccess={() => {}} 
-          isFullscreen={true} 
-        />
-      </div>
-    );
-  }
+  // لا يوجد جدار تسجيل إجباري — التطبيق متاح للجميع
+  // زر تسجيل الدخول موجود في الشريط الجانبي ويفتح LoginPopup الصغيرة
 
   return (
     <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
