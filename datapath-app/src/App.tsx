@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Menu } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Menu, Loader2 } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -14,6 +14,10 @@ import { GuidePage } from './pages/GuidePage';
 import { ComparisonPage } from './pages/ComparisonPage';
 import { parseFile, analyzeDataset, cleanDataset } from './lib/dataUtils';
 import type { DatasetInfo, Lang } from './types';
+import { auth } from './lib/firebase';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { AuthModal } from './components/AuthModal';
+import { LoginPopup } from './components/LoginPopup';
 import './App.css';
 
 type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare';
@@ -28,6 +32,18 @@ function App() {
   const [loadMsg, setLoadMsg] = useState('');
   const [progress, setProgress] = useState(0);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [loginPopupOpen, setLoginPopupOpen] = useState(false);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setAuthChecking(false);
+    });
+    return () => unsub();
+  }, []);
 
   const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
@@ -59,6 +75,28 @@ function App() {
     }
   }, [lang]);
 
+  const handleChatFile = useCallback(async (file: File) => {
+    setLoading(true);
+    setLoadMsg(lang === 'ar' ? 'جاري إرفاق وتحليل الملف...' : 'Attaching and analyzing file...');
+    setProgress(10);
+    try {
+      const timer = setInterval(() => setProgress(p => p < 90 ? p + 10 : p), 200);
+      const rows = await parseFile(file);
+      clearInterval(timer);
+      setProgress(90);
+      if (!rows.length) throw new Error('Empty file');
+      const info = analyzeDataset(file, rows);
+      setDataset(info);
+      setProgress(100);
+      showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بنجاح` : `✅ Attached ${info.rows.toLocaleString()} records`);
+    } catch {
+      showToast(lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file', 'err');
+    } finally { 
+      setLoading(false); 
+      setProgress(0);
+    }
+  }, [lang]);
+
   const handleClean = useCallback(() => {
     if (!dataset) return;
     const cleaned = cleanDataset(dataset);
@@ -69,6 +107,28 @@ function App() {
   const handleClose = () => { setDataset(null); setTab('home'); };
   const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar');
   
+
+  if (authChecking) {
+    return (
+      <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative ai-center-load`}>
+         <Loader2 size={36} className="spin" style={{ color: '#818cf8', margin: 'auto' }} />
+         <style>{`.ai-center-load { justify-content: center; align-items: center; background: #020617; } .spin { animation: auth-spin-anim 0.8s linear infinite; } @keyframes auth-spin-anim { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
+        <AuthModal 
+          isOpen={true} 
+          onClose={() => {}} 
+          onSuccess={() => {}} 
+          isFullscreen={true} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
@@ -87,6 +147,8 @@ function App() {
         onOpenEditor={() => { setSidePanelOpen(true); setMobileMenuOpen(false); }} 
         isMobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
+        currentUser={currentUser}
+        onLoginClick={() => setLoginPopupOpen(true)}
       />
 
       <main className="main flex-1 flex flex-col min-h-full">
@@ -108,7 +170,7 @@ function App() {
         {tab === 'home' && <HomePage lang={lang} onFile={handleFile} />}
         {tab === 'dashboard' && dataset && <DashboardPage info={dataset} lang={lang} />}
         {tab === 'cleaning' && dataset && <CleaningPage info={dataset} lang={lang} onClean={handleClean} onUpdate={setDataset} />}
-        {tab === 'chat' && <OpenRouterChat />}
+        {tab === 'chat' && <OpenRouterChat dataset={dataset} onFileUpload={handleChatFile} />}
         {tab === 'export' && dataset && <ExportPage info={dataset} lang={lang} />}
         {tab === 'about' && <AboutUsPage lang={lang} />}
         {tab === 'privacy' && <PrivacyPage lang={lang} />}
@@ -120,6 +182,13 @@ function App() {
           <EditorSidebar isOpen={sidePanelOpen} onClose={() => setSidePanelOpen(false)} info={dataset} lang={lang} onUpdate={setDataset} />
         )}
       </main>
+
+      {/* نافذة تسجيل الدخول المنبثقة الصغيرة */}
+      <LoginPopup
+        isOpen={loginPopupOpen}
+        onClose={() => setLoginPopupOpen(false)}
+        onSuccess={() => setLoginPopupOpen(false)}
+      />
     </div>
   );
 }

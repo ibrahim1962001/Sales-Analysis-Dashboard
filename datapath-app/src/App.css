@@ -97,6 +97,7 @@ html, body, #root {
   display: flex; flex-direction: column;
   padding: 24px 14px;
   z-index: 500;
+  overflow-y: auto;
 }
 .ltr .sidebar { right: auto; left: 0; border-left: none; border-right: 1px solid var(--border); }
 
@@ -165,6 +166,24 @@ html, body, #root {
   font-family: inherit; font-size: 13px; font-weight: 600; transition: all 0.2s; width: 100%;
 }
 .lang-toggle:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+/* زر تسجيل الدخول في الشريط الجانبي */
+.sidebar-login-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 10px; width: 100%;
+  border: 1px solid rgba(99,102,241,0.3);
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+  color: #a5b4fc; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 700; transition: all 0.22s;
+  letter-spacing: 0.01em;
+}
+.sidebar-login-btn:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,0.22), rgba(139,92,246,0.15));
+  border-color: rgba(99,102,241,0.55);
+  color: #c7d2fe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99,102,241,0.25);
+}
 
 /* =========================================
    PAGE BASE

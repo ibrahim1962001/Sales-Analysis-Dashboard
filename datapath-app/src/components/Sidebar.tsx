@@ -1,8 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft } from 'lucide-react';
+import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft, LogIn } from 'lucide-react';
 import { AdSpace } from './AdSpace';
 import { getActiveAdProviders } from '../config/adConfig';
 import type { Lang } from '../types';
+import type { User as FirebaseUser } from 'firebase/auth';
 
 type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare';
 
@@ -16,6 +17,8 @@ interface Props {
   onOpenEditor: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
+  currentUser?: FirebaseUser | null;
+  onLoginClick?: () => void;
 }
 
 const T = {
@@ -63,7 +66,7 @@ const supportItems: { tab: Tab; icon: any; key: string }[] = [
   { tab: 'privacy', icon: ShieldCheck, key: 'privacy' },
 ];
 
-export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onOpenEditor, isMobileOpen, onCloseMobile }) => {
+export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onOpenEditor, isMobileOpen, onCloseMobile, currentUser, onLoginClick }) => {
   const t = T[lang];
   const isAr = lang === 'ar';
 
@@ -129,6 +132,17 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
           <button className="sidebar-close-btn" onClick={onClose}>
             <X size={15} />
             <span>{t.close}</span>
+          </button>
+        )}
+        {/* زر تسجيل الدخول — يظهر فقط عندما لا يكون المستخدم مسجلاً */}
+        {!currentUser && onLoginClick && (
+          <button
+            id="sidebar-login-btn"
+            className="sidebar-login-btn"
+            onClick={onLoginClick}
+          >
+            <LogIn size={15} />
+            <span>{isAr ? 'تسجيل الدخول' : 'Sign In'}</span>
           </button>
         )}
         <button className="lang-toggle" onClick={onLang}>
