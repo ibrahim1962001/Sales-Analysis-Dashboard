@@ -11,7 +11,7 @@ interface Props { lang: Lang; onFile: (f: File) => void; }
 const T = {
   ar: {
     badge: '✨ يعمل بالكامل في المتصفح',
-    title: 'Kimit\nمنصة التحليل الذكية',
+    title: 'ذكاء\nغير محدود',
     sub: 'منصة Kimit تحلل بياناتك فوراً، تكتشف الأنماط، وتجيب على أسئلتك باستخدام أحدث تقنيات الذكاء الاصطناعي.',
     features: [
       { icon: BarChart2, title: 'رسوم بيانية تفاعلية', desc: 'Line، Bar، Area، Pie — تحليل بصري فوري' },
@@ -34,7 +34,7 @@ const T = {
   },
   en: {
     badge: '✨ Fully browser-based',
-    title: 'Kimit\nSmart Analytics',
+    title: 'UNLIMITED\nINTELLIGENCE',
     sub: 'Kimit Platform analyzes your data instantly, discovers patterns, and answers any question using the latest AI.',
     features: [
       { icon: BarChart2, title: 'Interactive Charts', desc: 'Line, Bar, Area, Pie — instant visual analysis' },

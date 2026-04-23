@@ -19,6 +19,7 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { get, set, del } from 'idb-keyval';
 // AuthModal removed — login is now optional via LoginPopup
 import { LoginPopup } from './components/LoginPopup';
+import { ParticlesBackground } from './components/ParticlesBackground';
 import './App.css';
 
 type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare';
@@ -51,7 +52,9 @@ function App() {
       }
     });
     
-    return () => unsub();
+    return () => {
+      unsub();
+    };
   }, []);
 
   useEffect(() => {
@@ -150,6 +153,8 @@ function App() {
 
   return (
     <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
+      <ParticlesBackground />
+
       {/* Mobile Menu Button */}
       <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}>
         <Menu size={24} />
