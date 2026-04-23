@@ -2,33 +2,59 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import type { DataRow, DatasetInfo, ColumnInfo, Anomaly, Correlation, ChartInfo } from '../types';
 
-export async function parseFile(file: File): Promise<DataRow[]> {
+export async function parseFile(file: File, onProgress?: (p: number) => void): Promise<DataRow[]> {
   const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext === 'csv') return parseCSV(file);
-  if (ext === 'xlsx' || ext === 'xls') return parseExcel(file);
+  
+  if (file.size > 50 * 1024 * 1024) {
+    throw new Error('File exceeds 50MB limit');
+  }
+
+  if (ext === 'csv') return parseCSV(file, onProgress);
+  if (ext === 'xlsx' || ext === 'xls') return parseExcel(file, onProgress);
   throw new Error('Unsupported file type');
 }
 
-function parseCSV(file: File): Promise<DataRow[]> {
+function parseCSV(file: File, onProgress?: (p: number) => void): Promise<DataRow[]> {
   return new Promise((resolve, reject) => {
+    let rows: DataRow[] = [];
+    const totalBytes = file.size;
+
     Papa.parse<DataRow>(file, {
       header: true,
       skipEmptyLines: true,
       dynamicTyping: true,
-      complete: (res) => resolve(res.data),
+      chunk: (results) => {
+        rows = rows.concat(results.data);
+        // Estimate progress based on rows if cursor isn't reliable, but let's just do a simple increment for now
+        // PapaParse doesn't easily expose exact bytes per chunk in the callback natively without stepping, 
+        // but we can estimate:
+        if (onProgress) {
+          onProgress(Math.min(90, 10 + Math.round((rows.length / (totalBytes / 100)) * 10)));
+        }
+      },
+      complete: () => {
+        if (onProgress) onProgress(90);
+        resolve(rows);
+      },
       error: reject,
     });
   });
 }
 
-function parseExcel(file: File): Promise<DataRow[]> {
+function parseExcel(file: File, onProgress?: (p: number) => void): Promise<DataRow[]> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    reader.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        onProgress(Math.min(90, Math.round((event.loaded / event.total) * 100)));
+      }
+    };
     reader.onload = (e) => {
       try {
         const wb = XLSX.read(e.target?.result, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json<DataRow>(ws, { defval: null });
+        if (onProgress) onProgress(95);
         resolve(data);
       } catch (err) { reject(err); }
     };

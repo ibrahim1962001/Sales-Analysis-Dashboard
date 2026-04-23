@@ -54,8 +54,15 @@ RULES:
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({})) as { error?: { message?: string } };
-    throw new Error(err?.error?.message ?? `API Error ${response.status}`);
+    if (response.status === 401) {
+      throw new Error(lang === 'ar' ? 'مفتاح API غير صحيح أو مفقود. يرجى التحقق من الإعدادات.' : 'Invalid or missing API Key. Please check settings.');
+    } else if (response.status === 429) {
+      throw new Error(lang === 'ar' ? 'تم تجاوز الحد المسموح للطلبات. يرجى المحاولة لاحقاً.' : 'Rate limit exceeded. Please try again later.');
+    } else if (response.status >= 500) {
+      throw new Error(lang === 'ar' ? 'مشكلة في خوادم الذكاء الاصطناعي. يرجى المحاولة لاحقاً.' : 'AI server issue. Please try again later.');
+    } else {
+      throw new Error(lang === 'ar' ? 'حدث خطأ غير متوقع في معالجة طلبك.' : 'An unexpected error occurred while processing your request.');
+    }
   }
 
   const data = await response.json() as { choices: { message: { content: string } }[] };

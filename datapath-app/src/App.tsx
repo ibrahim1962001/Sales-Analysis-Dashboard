@@ -16,6 +16,7 @@ import { parseFile, analyzeDataset, cleanDataset } from './lib/dataUtils';
 import type { DatasetInfo, Lang } from './types';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { get, set, del } from 'idb-keyval';
 // AuthModal removed — login is now optional via LoginPopup
 import { LoginPopup } from './components/LoginPopup';
 import './App.css';
@@ -40,8 +41,26 @@ function App() {
     const unsub = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
     });
+    
+    // Session Persistence 1.1
+    get('kimit_session_dataset').then((savedDataset) => {
+      if (savedDataset) {
+        setDataset(savedDataset);
+        setTab('dashboard');
+        // Toast is not shown here directly to avoid UI blocking early, but we could.
+      }
+    });
+    
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (dataset) {
+      set('kimit_session_dataset', dataset).catch(console.error);
+    } else {
+      del('kimit_session_dataset').catch(console.error);
+    }
+  }, [dataset]);
 
   const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
@@ -51,12 +70,13 @@ function App() {
   const handleFile = useCallback(async (file: File) => {
     setLoading(true);
     setLoadMsg(lang === 'ar' ? 'جاري التحليل... انتظر قليلاً' : 'Analyzing... please wait');
-    setProgress(10);
+    setProgress(0);
     try {
-      // Simulate progress for better UX
-      const timer = setInterval(() => setProgress(p => p < 90 ? p + 10 : p), 200);
-      const rows = await parseFile(file);
-      clearInterval(timer);
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error('exceeds 50MB');
+      }
+      
+      const rows = await parseFile(file, setProgress);
       setProgress(90);
       
       if (!rows.length) throw new Error('Empty file');
@@ -65,8 +85,12 @@ function App() {
       setProgress(100);
       showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
       setTimeout(() => setTab('dashboard'), 500);
-    } catch {
-      showToast(lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file', 'err');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      const msg = errorMessage === 'exceeds 50MB' 
+        ? (lang === 'ar' ? '❌ الملف كبير جداً (أقصى حد 50 ميجابايت)' : '❌ File too large (Max 50MB)')
+        : (lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file');
+      showToast(msg, 'err');
     } finally { 
       setLoading(false); 
       setProgress(0);
@@ -76,19 +100,24 @@ function App() {
   const handleChatFile = useCallback(async (file: File) => {
     setLoading(true);
     setLoadMsg(lang === 'ar' ? 'جاري إرفاق وتحليل الملف...' : 'Attaching and analyzing file...');
-    setProgress(10);
+    setProgress(0);
     try {
-      const timer = setInterval(() => setProgress(p => p < 90 ? p + 10 : p), 200);
-      const rows = await parseFile(file);
-      clearInterval(timer);
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error('exceeds 50MB');
+      }
+      const rows = await parseFile(file, setProgress);
       setProgress(90);
       if (!rows.length) throw new Error('Empty file');
       const info = analyzeDataset(file, rows);
       setDataset(info);
       setProgress(100);
       showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بنجاح` : `✅ Attached ${info.rows.toLocaleString()} records`);
-    } catch {
-      showToast(lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file', 'err');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      const msg = errorMessage === 'exceeds 50MB' 
+        ? (lang === 'ar' ? '❌ الملف كبير جداً (أقصى حد 50 ميجابايت)' : '❌ File too large (Max 50MB)')
+        : (lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file');
+      showToast(msg, 'err');
     } finally { 
       setLoading(false); 
       setProgress(0);
@@ -102,7 +131,17 @@ function App() {
     showToast(lang === 'ar' ? '✅ تمت التنقية بنجاح!' : '✅ Data cleaned successfully!');
   }, [dataset, lang]);
 
-  const handleClose = () => { setDataset(null); setTab('home'); };
+  const handleClose = () => { 
+    setDataset(null); 
+    setTab('home'); 
+    del('kimit_session_dataset');
+  };
+  
+  const handleClearSession = () => {
+    handleClose();
+    showToast(lang === 'ar' ? '🗑️ تم مسح الجلسة بنجاح' : '🗑️ Session cleared successfully');
+  };
+
   const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar');
   
 
@@ -123,6 +162,7 @@ function App() {
         onTab={(t) => { setTab(t); setMobileMenuOpen(false); }} 
         onLang={toggleLang} 
         onClose={handleClose} 
+        onClearSession={handleClearSession}
         onOpenEditor={() => { setSidePanelOpen(true); setMobileMenuOpen(false); }} 
         isMobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft, User, LogOut, Trash2 } from 'lucide-react';
 import { AdSpace } from './AdSpace';
 import { getActiveAdProviders } from '../config/adConfig';
 import type { Lang } from '../types';
@@ -15,6 +15,7 @@ interface Props {
   onTab: (t: Tab) => void;
   onLang: () => void;
   onClose: () => void;
+  onClearSession?: () => void;
   onOpenEditor: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
@@ -30,6 +31,7 @@ const T = {
     chat: 'المستشار', 
     export: 'تصدير', 
     close: 'إغلاق الملف',
+    clearSession: 'مسح الجلسة',
     about: 'من نحن',
     privacy: 'الخصوصية',
     faq: 'الأسئلة الشائعة',
@@ -43,6 +45,7 @@ const T = {
     chat: 'AI Chat', 
     export: 'Export', 
     close: 'Close File',
+    clearSession: 'Clear Session',
     about: 'About Us',
     privacy: 'Privacy',
     faq: 'FAQ',
@@ -67,7 +70,7 @@ const supportItems: { tab: Tab; icon: React.ElementType; key: string }[] = [
   { tab: 'privacy', icon: ShieldCheck, key: 'privacy' },
 ];
 
-export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onOpenEditor, isMobileOpen, onCloseMobile, currentUser, onLoginClick }) => {
+export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onClearSession, onOpenEditor, isMobileOpen, onCloseMobile, currentUser, onLoginClick }) => {
   const t = T[lang];
   const isAr = lang === 'ar';
 
@@ -161,10 +164,16 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
 
       <div className="sidebar-footer">
         {hasData && (
-          <button className="sidebar-close-btn" onClick={onClose}>
-            <X size={15} />
-            <span>{t.close}</span>
-          </button>
+          <>
+            <button className="sidebar-close-btn" onClick={onClose} style={{ marginBottom: '8px' }}>
+              <X size={15} />
+              <span>{t.close}</span>
+            </button>
+            <button className="sidebar-close-btn" onClick={onClearSession} style={{ backgroundColor: '#fee2e2', color: '#ef4444', borderColor: '#ef4444', marginBottom: '8px' }}>
+              <Trash2 size={15} />
+              <span>{t.clearSession}</span>
+            </button>
+          </>
         )}
         {/* زر تسجيل الدخول تم نقله للأعلى */}
         <button className="lang-toggle" onClick={onLang}>

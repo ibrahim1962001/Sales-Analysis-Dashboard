@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   signInWithPopup,
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { X, Loader2, AlertCircle, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-
+import { useUser } from '../contexts/UserContext';
 interface LoginPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,6 +15,7 @@ interface LoginPopupProps {
 type Mode = 'login' | 'register';
 
 export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { smartRegisterOrLogin } = useUser();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,7 +78,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
     setError(null);
     try {
       if (mode === 'register') {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await smartRegisterOrLogin(email, password);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
