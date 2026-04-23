@@ -73,8 +73,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
   const sidebarAdProvider = AD_PROVIDERS.filter(p => p.id === 'social_banner');
 
   const handleFetchSummary = async () => {
-    const apiKey = localStorage.getItem('groq_key') || '';
-    if (!apiKey) return;
+    const apiKey = localStorage.getItem('groq_key') || undefined;
     setLoadingSummary(true);
     try {
       const res = await generateExecutiveSummary(info, apiKey, lang);
@@ -115,10 +114,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
   // Phase 2.1: Proactive Insights
   useEffect(() => {
     if (!summary && !loadingSummary) {
-      const apiKey = localStorage.getItem('groq_key');
-      if (apiKey) {
-        handleFetchSummary();
-      }
+      handleFetchSummary();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

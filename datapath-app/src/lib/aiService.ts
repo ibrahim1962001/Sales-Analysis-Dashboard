@@ -1,7 +1,7 @@
 import type { DatasetInfo, Lang } from '../types';
 
 // Set this via environment or UI rather than hardcoding a real key.
-const DEFAULT_GROQ_API_KEY = '';
+const DEFAULT_API_KEY = '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';
 
 export interface ChatParams {
   question: string;
@@ -13,7 +13,7 @@ export interface ChatParams {
 
 export async function askAI(params: ChatParams): Promise<string> {
   const { question, history, apiKey, dataset, lang } = params;
-  const activeApiKey = apiKey || DEFAULT_GROQ_API_KEY;
+  const activeApiKey = apiKey || DEFAULT_API_KEY;
 
   const systemPrompt = `
 You are DataPath AI, a premium world-class Data Analyst and General AI Assistant.
@@ -38,14 +38,16 @@ RULES:
     { role: 'user' as const, content: question },
   ];
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${activeApiKey}`,
       'Content-Type': 'application/json',
+      'HTTP-Referer': window.location.origin,
+      'X-Title': 'Kimit AI Studio',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'meta-llama/llama-3.3-70b-instruct',
       messages: [{ role: 'system', content: systemPrompt }, ...messages],
       temperature: 0.7,
       max_tokens: 1024,
