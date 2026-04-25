@@ -12,6 +12,7 @@ import confetti from 'canvas-confetti';
 import { AdSpace } from '../components/AdSpace';
 import { AD_PROVIDERS } from '../config/adConfig';
 import { DataPreview } from '../components/DataPreview';
+import { useMediaQuery } from 'react-responsive';
 
 interface Props { info: DatasetInfo; lang: Lang; }
 
@@ -49,6 +50,7 @@ const T = {
 };
 
 export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const dashRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   
@@ -258,7 +260,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
         />
       </div>
 
-      <div className="dash-layout">
+      <div className="dash-layout" style={isMobile ? { display: 'flex', flexDirection: 'column', gap: 0 } : {}}>
         {/* Charts grid */}
         <div className="charts-section">
           {/* Custom Builder */}
@@ -298,7 +300,14 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
           </div>
 
           <div className="section-title">{t.chartsTitle}</div>
-          <div className="charts-grid">
+          <div
+            className="charts-grid"
+            style={isMobile ? {
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: '14px',
+            } : {}}
+          >
             {customCharts.map((ch, i) => (
               <div key={`custom-${i}`} style={{ position: 'relative' }}>
                  <DataChart chart={ch} />
@@ -307,6 +316,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
                  </button>
               </div>
             ))}
+            {/* On mobile show all charts — grid is 1 col so it's clean */}
             {info.charts.map((ch, i) => <DataChart key={i} chart={ch} />)}
           </div>
         </div>

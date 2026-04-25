@@ -5,12 +5,14 @@ import type { ChartInfo } from '../types';
 import { forecastTimeSeries } from '../lib/statService';
 import type { ForecastResult } from '../lib/statService';
 import { useState } from 'react';
+import { useMediaQuery } from 'react-responsive';
 
 interface Props { chart: ChartInfo; }
 
 const COLORS = ['#10b981', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#3b82f6'];
 
 export const DataChart: React.FC<Props> = ({ chart }) => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const chartRef = useRef<ReactECharts>(null);
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
 
@@ -176,12 +178,19 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
       </div>
       <div
         className="chart-body"
-        style={{
-          // responsive: use aspect-ratio on mobile, fixed on desktop
+        style={isMobile ? {
+          // Mobile: explicit height — no aspect-ratio (Safari issues)
+          width: '100%',
+          height: chart.type === 'pie' ? '280px' : '220px',
+          padding: '0 4px',
+          overflow: 'visible',
+        } : {
+          // Desktop: aspect-ratio based
           width: '100%',
           aspectRatio: chart.type === 'pie' ? '1 / 1' : '16 / 9',
-          maxHeight: chart.type === 'pie' ? '320px' : '300px',
+          maxHeight: chart.type === 'pie' ? '340px' : '300px',
           padding: '0 5px',
+          overflow: 'visible',
         }}
       >
         <ReactECharts

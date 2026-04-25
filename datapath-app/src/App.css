@@ -2242,3 +2242,105 @@ html, body, #root {
   filter: brightness(1.2) contrast(1.05);
   background: transparent;
 }
+
+/* =========================================
+   MOBILE CRITICAL OVERRIDES v2
+   (react-responsive + CSS backup)
+========================================= */
+
+/* Reset any Bootstrap/Tailwind global box-sizing conflicts */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Dashboard page padding on mobile */
+@media (max-width: 768px) {
+  .page { padding: 12px 10px !important; }
+  .dash-content-wrapper { padding: 0 !important; }
+  .dashboard-preview-section { padding: 0 10px !important; margin-bottom: 14px !important; }
+
+  /* KPI grid: 2 columns always */
+  .kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .stat-box { min-height: 80px !important; padding: 14px 10px !important; }
+  .stat-val  { font-size: 20px !important; }
+  .stat-label { font-size: 11px !important; }
+
+  /* Charts: 1 column, no overflow */
+  .charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .chart-card {
+    width: 100% !important;
+    overflow: visible !important;
+    margin: 0 !important;
+  }
+  .chart-body {
+    overflow: visible !important;
+  }
+
+  /* Dash layout: stack vertically */
+  .dash-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .charts-section, .insights-section {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+
+  /* Slicers bar: horizontal scroll */
+  .slicers-bar {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding: 12px 10px !important;
+  }
+
+  /* Builder panel: single column */
+  .builder-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .builder-panel { padding: 14px 12px !important; }
+
+  /* Navbar */
+  .nav-header { padding: 12px 14px !important; }
+  .nav-tabs    { gap: 4px !important; }
+  .nav-tab     { font-size: 11px !important; padding: 7px 10px !important; }
+
+  /* Home page */
+  .home-page  { padding: 20px 14px !important; }
+  .hero-title { font-size: clamp(24px, 8vw, 42px) !important; }
+  .hero-sub   { font-size: 13px !important; }
+  .features-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .feature-card  { padding: 16px 12px !important; min-height: 120px !important; }
+  .feature-icon  { width: 22px !important; height: 22px !important; }
+  .feature-title { font-size: 12px !important; }
+  .feature-desc  { font-size: 10px !important; }
+
+  /* Dropzone */
+  .dropzone { padding: 30px 14px !important; }
+  .dz-formats { flex-wrap: wrap !important; gap: 6px !important; }
+
+  /* Floating chat pill */
+  .or-input-row {
+    border-radius: 22px !important;
+    padding: 8px 8px 8px 14px !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 14px !important;
+  }
+
+  /* Insight section */
+  .insight-box { margin-bottom: 12px !important; }
+  .dashboard-ad-square { display: none !important; }
+}
