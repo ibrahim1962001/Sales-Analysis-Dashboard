@@ -89,14 +89,16 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
       baseOption.series.push({
         name: chart.title,
         type: 'pie',
-        radius: ['45%', '70%'],
+        // Responsive radius - fits within container
+        radius: ['38%', '65%'],
+        center: ['50%', '52%'],
         itemStyle: { borderRadius: 5, borderColor: '#0f172a', borderWidth: 2 },
         label: { show: false },
-        emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#fff', formatter: '{c}' } },
-        data: chart.data.map((d, i) => ({ 
-          name: String(d.x).slice(0, 20), 
-          value: Number(d.y), 
-          itemStyle: { color: COLORS[i % COLORS.length] } 
+        emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold', color: '#fff', formatter: '{c}' } },
+        data: chart.data.map((d, i) => ({
+          name: String(d.x).slice(0, 20),
+          value: Number(d.y),
+          itemStyle: { color: COLORS[i % COLORS.length] }
         }))
       });
     } else {
@@ -172,7 +174,16 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
            </button>
         </div>
       </div>
-      <div className="chart-body" style={{ height: '280px', width: '100%', padding: '0 5px' }}>
+      <div
+        className="chart-body"
+        style={{
+          // responsive: use aspect-ratio on mobile, fixed on desktop
+          width: '100%',
+          aspectRatio: chart.type === 'pie' ? '1 / 1' : '16 / 9',
+          maxHeight: chart.type === 'pie' ? '320px' : '300px',
+          padding: '0 5px',
+        }}
+      >
         <ReactECharts
           ref={chartRef}
           option={getOption()}

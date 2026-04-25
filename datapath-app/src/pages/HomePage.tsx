@@ -69,10 +69,22 @@ export const HomePage: React.FC<Props> = ({ lang, onFile }) => {
   return (
     <div className="home-page">
       <div className="home-hero">
-        <div className="home-logo-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '80px', height: '60px', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
-            <img src={logoImg} alt="Kimit Logo" className="home-logo" />
-          </div>
+        <div className="home-logo-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          {/* Logo: mix-blend-mode:screen removes the black background baked into the PNG on our dark page */}
+          <img
+            src={logoImg}
+            alt="Kimit Logo"
+            style={{
+              width: '90px',
+              height: '90px',
+              objectFit: 'cover',
+              objectPosition: 'top',
+              mixBlendMode: 'screen',
+              filter: 'brightness(1.25) contrast(1.05) saturate(1.1)',
+              borderRadius: '16px',
+              background: 'transparent',
+            }}
+          />
           <span className="home-site-name">Kimit AI Studio</span>
         </div>
         <div className="hero-badge">{t.badge}</div>
