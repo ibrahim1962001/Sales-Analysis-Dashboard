@@ -87,16 +87,25 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
       return;
     }
 
-    const view = new window.google.picker.DocsView(window.google.picker.ViewId.SPREADSHEETS);
-    view.setMimeTypes('application/vnd.google-apps.spreadsheet');
-    view.setIncludeFolders(true);
+    // ✅ Google Sheets ONLY — My Drive tab
+    const sheetsView = new window.google.picker.DocsView(window.google.picker.ViewId.SPREADSHEETS);
+    sheetsView.setMimeTypes('application/vnd.google-apps.spreadsheet'); // Google Sheets فقط (مش Excel)
+    sheetsView.setIncludeFolders(false);  // لا مجلدات
+    sheetsView.setSelectFolderEnabled(false); // لا يسمح باختيار مجلد
+
+    // ✅ Shared with me — Sheets only
+    const sharedView = new window.google.picker.DocsView(window.google.picker.ViewId.SPREADSHEETS);
+    sharedView.setMimeTypes('application/vnd.google-apps.spreadsheet');
+    sharedView.setIncludeFolders(false);
+    sharedView.setOwnedByMe(false); // الملفات المشاركة معك
 
     const picker = new window.google.picker.PickerBuilder()
       .setAppId(APP_ID)
       .setOAuthToken(token)
       .setDeveloperKey(GOOGLE_API_KEY)
-      .addView(view)
-      .setTitle(lang === 'ar' ? 'اختر جدول بيانات' : 'Select a Spreadsheet')
+      .addView(sheetsView)           // My Drive — Sheets only
+      .addView(sharedView)           // Shared with me — Sheets only
+      .setTitle(lang === 'ar' ? '📊 اختر جدول Google Sheets' : '📊 Select a Google Sheet')
       .setCallback((data: any) => {
         if (data.action === window.google.picker.Action.PICKED && data.docs?.[0]) {
           fetchSheet(data.docs[0], token);
