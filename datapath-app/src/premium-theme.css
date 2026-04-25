@@ -1,0 +1,497 @@
+/* =====================================================
+   KIMIT AI STUDIO — PREMIUM THEME v2
+   Stacks on top of App.css — no class names changed
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+
+/* ── Design Tokens upgrade ───────────────────────── */
+:root {
+  --primary:        #00e5a0;
+  --primary-glow:   rgba(0, 229, 160, 0.22);
+  --primary-dark:   #00b87a;
+  --secondary:      #7c6aff;
+  --secondary-glow: rgba(124, 106, 255, 0.2);
+  --accent:         #f5b731;
+  --danger:         #ff4d6a;
+
+  --bg:             #070d1a;
+  --bg-gradient:    radial-gradient(ellipse 120% 80% at 50% -10%,
+                      rgba(0,229,160,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse 80% 60% at 90% 100%,
+                      rgba(124,106,255,0.07) 0%, transparent 55%),
+                    #070d1a;
+
+  --card:           rgba(255,255,255,0.028);
+  --card-hover:     rgba(255,255,255,0.05);
+  --surface:        rgba(255,255,255,0.032);
+  --border:         rgba(255,255,255,0.07);
+  --border-hover:   rgba(0,229,160,0.35);
+
+  --text:           #edf2ff;
+  --text-dim:       #8899b4;
+  --muted:          #526070;
+  --brand:          #00e5a0;
+
+  --radius-sm:  12px;
+  --radius-md:  18px;
+  --radius-lg:  26px;
+  --radius-xl:  36px;
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.18);
+  --shadow-md:  0 6px 20px rgba(0,0,0,0.28);
+  --shadow-lg:  0 16px 48px rgba(0,0,0,0.40);
+  --shadow-glow: 0 0 32px rgba(0,229,160,0.14);
+
+  --glass-bg:     rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.07);
+}
+
+/* ── Base typography upgrade ─────────────────────── */
+html, body, #root {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Arabic', 'Inter', system-ui, sans-serif !important;
+  background: var(--bg-gradient) !important;
+  letter-spacing: -0.01em;
+}
+
+/* ── Ambient orbs — more premium ─────────────────── */
+.app::before {
+  background:
+    radial-gradient(ellipse 55% 45% at 8%  15%, rgba(0,229,160,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 92% 85%, rgba(124,106,255,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(0,15,40,0.5) 0%, transparent 100%) !important;
+  filter: blur(70px) !important;
+}
+
+/* ── Sidebar — glassmorphism ultra ──────────────── */
+@media (min-width: 900px) {
+  .sidebar {
+    background: rgba(6, 12, 28, 0.72) !important;
+    backdrop-filter: blur(48px) saturate(220%) !important;
+    -webkit-backdrop-filter: blur(48px) saturate(220%) !important;
+    border: 1px solid rgba(255,255,255,0.065) !important;
+    border-radius: 28px !important;
+    box-shadow:
+      0 24px 56px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -1px 0 rgba(0,0,0,0.2) !important;
+  }
+}
+
+/* Sidebar logo glow */
+.logo-icon {
+  background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+  box-shadow: 0 0 24px var(--primary-glow), 0 0 8px rgba(124,106,255,0.2) !important;
+  border-radius: 14px !important;
+}
+
+/* Nav buttons — smoother premium active */
+.nav-btn.active {
+  background: linear-gradient(135deg,
+    rgba(0,229,160,0.13) 0%,
+    rgba(124,106,255,0.07) 100%) !important;
+  border-color: rgba(0,229,160,0.22) !important;
+  box-shadow: 0 4px 20px rgba(0,229,160,0.08) !important;
+  color: #fff !important;
+}
+.nav-btn.active::after {
+  background: linear-gradient(to bottom, var(--primary), var(--secondary)) !important;
+  box-shadow: 0 0 12px var(--primary-glow) !important;
+}
+.nav-btn:hover:not(.disabled) {
+  background: rgba(255,255,255,0.045) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+.nav-btn.active .nav-icon { color: var(--primary) !important; }
+
+/* ── Primary button — premium gradient pill ──────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #00c98a 60%, var(--primary-dark) 100%) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 99px !important;
+  box-shadow:
+    0 6px 24px rgba(0,229,160,0.28),
+    0 1px 0 rgba(255,255,255,0.2) inset !important;
+  font-family: 'Plus Jakarta Sans', inherit !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1) !important;
+  color: #021a0e !important;
+}
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.03) !important;
+  box-shadow:
+    0 14px 36px rgba(0,229,160,0.38),
+    0 1px 0 rgba(255,255,255,0.3) inset !important;
+  filter: brightness(1.08) !important;
+}
+.btn-primary:active { transform: translateY(0) scale(0.97) !important; }
+
+/* ── Page titles ─────────────────────────────────── */
+.page-title {
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, #fff 10%, #8899b4 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* ── KPI stat boxes — glowing accent borders ─────── */
+.stat-box {
+  border-radius: 20px !important;
+  padding: 22px 18px !important;
+  background: rgba(255,255,255,0.025) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.stat-box::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 20px 20px 0 0;
+}
+.stat-box:hover { transform: translateY(-4px) !important; }
+.stat-box:hover::before { opacity: 1; }
+.stat-box.green  { border-color: rgba(0,229,160,0.2) !important; background: rgba(0,229,160,0.045) !important; }
+.stat-box.green::before  { background: linear-gradient(90deg, transparent, #00e5a0, transparent); }
+.stat-box.blue   { border-color: rgba(124,106,255,0.2) !important; background: rgba(124,106,255,0.045) !important; }
+.stat-box.blue::before   { background: linear-gradient(90deg, transparent, #7c6aff, transparent); }
+.stat-box.yellow { border-color: rgba(245,183,49,0.2) !important; background: rgba(245,183,49,0.045) !important; }
+.stat-box.yellow::before { background: linear-gradient(90deg, transparent, #f5b731, transparent); }
+.stat-box.red    { border-color: rgba(255,77,106,0.2) !important; background: rgba(255,77,106,0.045) !important; }
+.stat-box.red::before    { background: linear-gradient(90deg, transparent, #ff4d6a, transparent); }
+
+.stat-val   { font-size: 30px !important; font-weight: 900 !important; letter-spacing: -1px !important; }
+.stat-label { font-size: 12px !important; font-weight: 600 !important; color: var(--text-dim) !important; letter-spacing: 0.02em !important; }
+
+/* ── Chart cards — premium glass ────────────────── */
+.chart-card {
+  background: rgba(255,255,255,0.025) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  border-radius: 24px !important;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  overflow: visible !important;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+.chart-card:hover {
+  transform: translateY(-6px) !important;
+  border-color: rgba(0,229,160,0.2) !important;
+  box-shadow:
+    0 20px 48px rgba(0,0,0,0.36),
+    0 0 0 1px rgba(0,229,160,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.1) !important;
+}
+
+/* Chart header */
+.chart-header {
+  padding: 18px 20px 10px !important;
+}
+.chart-title {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #e2e8f0 !important;
+  letter-spacing: -0.02em !important;
+}
+.chart-type-badge {
+  background: rgba(255,255,255,0.055) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 999px !important;
+  color: var(--text-dim) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  padding: 5px 12px !important;
+}
+
+/* Chart download button */
+.chart-download-btn {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 10px !important;
+  color: var(--text-dim) !important;
+  padding: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+.chart-download-btn:hover {
+  background: rgba(0,229,160,0.12) !important;
+  border-color: rgba(0,229,160,0.3) !important;
+  color: var(--primary) !important;
+}
+.chart-download-btn.active {
+  background: rgba(245,183,49,0.15) !important;
+  border-color: rgba(245,183,49,0.3) !important;
+  color: #f5b731 !important;
+}
+
+/* ── Dropzone — premium dashed glow ──────────────── */
+.dropzone {
+  border: 2px dashed rgba(0,229,160,0.18) !important;
+  border-radius: 28px !important;
+  background: rgba(0,229,160,0.015) !important;
+  backdrop-filter: blur(16px) !important;
+  transition: all 0.35s ease !important;
+}
+.dropzone:hover {
+  border-color: rgba(0,229,160,0.55) !important;
+  background: rgba(0,229,160,0.04) !important;
+  box-shadow: 0 0 48px rgba(0,229,160,0.10), 0 0 0 1px rgba(0,229,160,0.12) !important;
+}
+.dropzone-title { font-size: 22px !important; font-weight: 900 !important; color: #fff !important; }
+
+/* ── Feature cards on home ───────────────────────── */
+.feature-card {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  border-radius: 28px !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+.feature-card:hover {
+  border-color: rgba(0,229,160,0.35) !important;
+  background: rgba(0,229,160,0.04) !important;
+  transform: translateY(-10px) scale(1.03) !important;
+  box-shadow: 0 24px 52px rgba(0,0,0,0.36), 0 0 30px rgba(0,229,160,0.12) !important;
+}
+.feature-icon {
+  background: rgba(0,229,160,0.1) !important;
+  border-radius: 14px !important;
+  color: var(--primary) !important;
+}
+.feature-title { color: #fff !important; font-weight: 800 !important; }
+.feature-desc  { color: var(--text-dim) !important; font-size: 12.5px !important; }
+
+/* ── Hero section ─────────────────────────────────── */
+.hero-badge {
+  background: rgba(0,229,160,0.08) !important;
+  border: 1px solid rgba(0,229,160,0.2) !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+.hero-title {
+  background: linear-gradient(135deg, #fff 0%, #c4d0e8 60%, #8899b4 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  letter-spacing: -2.5px !important;
+}
+.home-site-name {
+  background: linear-gradient(135deg, #fff 20%, var(--primary) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* ── Insight boxes ────────────────────────────────── */
+.insight-box {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(16px) !important;
+}
+.insight-box.data-health-box { border-color: rgba(0,229,160,0.18) !important; }
+
+/* ── Slicers bar ─────────────────────────────────── */
+.slicers-bar {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(16px) !important;
+}
+.slicers-bar select {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 12px !important;
+  color: #e2e8f0 !important;
+  padding: 10px 14px !important;
+}
+
+/* ── Builder panel ───────────────────────────────── */
+.builder-panel {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(16px) !important;
+}
+.builder-panel select {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 12px !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Export cards ────────────────────────────────── */
+.export-card {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  border-radius: 24px !important;
+  backdrop-filter: blur(16px) !important;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+.export-card:hover {
+  border-color: rgba(0,229,160,0.3) !important;
+  transform: translateY(-8px) !important;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.36) !important;
+}
+.export-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  color: #021a0e !important;
+  border: none !important;
+  padding: 13px 20px !important;
+}
+
+/* ── Cleaning page banner ────────────────────────── */
+.clean-banner {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 22px !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+/* ── Data table ──────────────────────────────────── */
+.data-table th {
+  background: rgba(0,229,160,0.05) !important;
+  border-bottom: 1px solid rgba(0,229,160,0.15) !important;
+  color: var(--primary) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+.data-table tr:hover td { background: rgba(255,255,255,0.025) !important; }
+.data-table td {
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+  color: #c8d8e8 !important;
+  font-size: 13px !important;
+}
+
+/* ── Column profile cards ────────────────────────── */
+.col-card {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(16px) !important;
+  transition: all 0.3s ease !important;
+}
+.col-card:hover {
+  border-color: rgba(0,229,160,0.25) !important;
+  transform: translateY(-4px) !important;
+}
+
+/* ── Section title line ──────────────────────────── */
+.section-title {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  color: var(--muted) !important;
+  text-transform: uppercase !important;
+}
+.section-title::after {
+  background: linear-gradient(to right, rgba(255,255,255,0.07), transparent) !important;
+}
+
+/* ── Mobile header bar ───────────────────────────── */
+.nav-header {
+  background: rgba(7,13,26,0.85) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.065) !important;
+}
+.nav-tab.active {
+  color: var(--primary) !important;
+  border-bottom-color: var(--primary) !important;
+}
+
+/* ── Scrollbar — premium thin ────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0,229,160,0.25);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(0,229,160,0.45); }
+
+/* ── Selection color ─────────────────────────────── */
+::selection { background: rgba(0,229,160,0.25); color: #fff; }
+
+/* ── Input / Select global ───────────────────────── */
+input, select, textarea {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Arabic', system-ui !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  color: var(--text) !important;
+  border-radius: 12px !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: rgba(0,229,160,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(0,229,160,0.08) !important;
+}
+
+/* ── OR input / chat pill ────────────────────────── */
+.or-input-row {
+  background: rgba(7,13,26,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  backdrop-filter: blur(32px) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) !important;
+}
+
+/* ── Google Sheets picker button ────────────────── */
+.gsheets-btn {
+  background: linear-gradient(135deg, rgba(0,229,160,0.12), rgba(124,106,255,0.08)) !important;
+  border: 1px solid rgba(0,229,160,0.25) !important;
+  border-radius: 14px !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  transition: all 0.3s ease !important;
+}
+.gsheets-btn:hover {
+  background: linear-gradient(135deg, rgba(0,229,160,0.2), rgba(124,106,255,0.14)) !important;
+  border-color: rgba(0,229,160,0.45) !important;
+  box-shadow: 0 6px 20px rgba(0,229,160,0.18) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ── Sidebar version badge ───────────────────────── */
+.sidebar-footer {
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+/* ── Insight severity badges ────────────────────── */
+.sev-badge.high   { background: rgba(255,77,106,0.12)  !important; color: #ff4d6a !important; border: 1px solid rgba(255,77,106,0.2) !important; }
+.sev-badge.medium { background: rgba(245,183,49,0.12)  !important; color: #f5b731 !important; border: 1px solid rgba(245,183,49,0.2) !important; }
+
+/* ── How-to steps ────────────────────────────────── */
+.how-to-section {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.065) !important;
+  backdrop-filter: blur(16px) !important;
+  border-radius: 24px !important;
+}
+.how-to-step {
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  border-radius: 18px !important;
+}
+.how-to-step-number {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+  color: #021a0e !important;
+  font-weight: 900 !important;
+}

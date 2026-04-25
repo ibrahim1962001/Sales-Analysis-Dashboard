@@ -20,6 +20,8 @@ import { get, set, del } from 'idb-keyval';
 // AuthModal removed — login is now optional via LoginPopup
 import { LoginPopup } from './components/LoginPopup';
 import './App.css';
+import './premium-theme.css';
+
 
 type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare';
 
