@@ -95,24 +95,26 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
 
   return (
     <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
-      <button
-        className="mobile-close-btn"
-        onClick={(e) => { e.stopPropagation(); onCloseMobile?.(); }}
-        aria-label="Close menu"
-      >
-        <X size={22} />
-      </button>
-
-      <div className="sidebar-logo">
-        <div className="logo-img-wrapper">
-          <img 
-            src="/logo.png" 
-            alt="Kimit Logo" 
-            className="logo-img"
-            onError={(e) => { (e.target as HTMLImageElement).src = "https://img.icons8.com/clouds/200/egyptian-pyramids.png"; }}
-          />
+      <div className="sidebar-mobile-header">
+        <div className="sidebar-logo">
+          <div className="logo-img-wrapper">
+            <img 
+              src="/logo.png" 
+              alt="Kimit Logo" 
+              className="logo-img"
+              onError={(e) => { (e.target as HTMLImageElement).src = "https://img.icons8.com/clouds/200/egyptian-pyramids.png"; }}
+            />
+          </div>
+          <span className="site-name">Kimit AI Studio</span>
         </div>
-        <span className="site-name">Kimit AI Studio</span>
+        
+        <button
+          className="mobile-close-btn"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCloseMobile?.(); }}
+          aria-label="Close menu"
+        >
+          <X size={24} />
+        </button>
       </div>
 
       {/* User Profile / Login Section */}
