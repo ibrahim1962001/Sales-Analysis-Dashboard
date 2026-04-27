@@ -26,7 +26,7 @@ import './premium-theme.css';
 type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare';
 
 function App() {
-  const [lang, setLang] = useState<Lang>('ar');
+  const [lang, setLang] = useState<Lang>('en');
   const [tab, setTab] = useState<Tab>('home');
   const [dataset, setDataset] = useState<DatasetInfo | null>(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -38,6 +38,11 @@ function App() {
 
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }, [lang]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
