@@ -80,7 +80,7 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
       {isVisible ? (
         <iframe
           src="/ad.html"
-          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-top-navigation-by-user-activation"
           style={{
             width: '100%',
             minHeight: `${height}px`,
