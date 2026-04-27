@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, FileSpreadsheet, PlayCircle } from 'lucide-react';
 import type { Lang } from '../types';
@@ -40,12 +39,20 @@ Elena,27,Italy,2100,2023-03-05`;
 
 export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
   const t = T[lang];
+  const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      if (acceptedFiles[0]) onFile(acceptedFiles[0]);
+    (acceptedFiles: File[], fileRejections: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (fileRejections.length > 0) {
+        setError(lang === 'ar' ? 'عذراً، هذا النوع من الملفات غير مدعوم' : 'Sorry, this file type is not supported');
+        return;
+      }
+      if (acceptedFiles[0]) {
+        setError(null);
+        onFile(acceptedFiles[0]);
+      }
     },
-    [onFile]
+    [onFile, lang]
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -66,12 +73,12 @@ export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
   };
 
   return (
-    <div className="dropzone-outer">
+    <div className="flex flex-col items-center gap-4 w-full max-w-[680px]">
       {/* ─── File Drop Area ─── */}
       <div
         {...getRootProps()}
         onClick={open}
-        className={`dropzone ${isDragActive ? 'dragging border-primary bg-primary/10' : ''}`}
+        className={`dropzone w-full p-10 border-2 border-dashed rounded-[2rem] transition-all cursor-pointer text-center ${isDragActive ? 'dragging border-primary bg-primary/10 scale-[1.02]' : 'border-white/10 hover:border-primary/40 hover:bg-white/[0.02]'}`}
       >
         <input {...getInputProps()} />
 
@@ -93,11 +100,14 @@ export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
             </span>
           ))}
         </div>
+        {error && (
+          <p className="text-red-400 text-sm mt-3 font-bold animate-pulse">{error}</p>
+        )}
         <div className="dropzone-badge">{t.badge}</div>
       </div>
 
       {/* ─── Divider ─── */}
-      <div className="dz-divider">
+      <div className="flex items-center w-full gap-3 text-white/30 text-xs font-bold tracking-widest uppercase before:content-[''] before:flex-1 before:h-[1px] before:bg-white/5 after:content-[''] after:flex-1 after:h-[1px] after:bg-white/5">
         <span>{t.or}</span>
       </div>
 

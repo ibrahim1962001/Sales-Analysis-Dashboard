@@ -1,7 +1,7 @@
 import type { DatasetInfo, Lang } from '../types';
 
 // Set this via environment or UI rather than hardcoding a real key.
-const LLAMA_API_KEY = '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';
+const LLAMA_API_KEY = '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';
 
 export interface ChatParams {
   question: string;
@@ -77,13 +77,14 @@ RULES:
 
 export async function generateExecutiveSummary(dataset: DatasetInfo, apiKey: string | undefined, lang: Lang): Promise<string> {
   const prompt = `
-    Analyze this dataset and provide a brief executive summary (max 3-4 bullet points) in ${lang === 'ar' ? 'Arabic' : 'English'}.
+    Analyze this dataset and provide a premium executive summary in ${lang === 'ar' ? 'Arabic' : 'English'}.
     Focus on:
-    1. Overall data health and quality.
-    2. One interesting pattern or insight from correlations/anomalies.
-    3. A clear recommendation for the user.
+    1. Overall Data Health & Quality.
+    2. Most Important Insights (patterns/anomalies).
+    3. Future Predictions / Forecasting (what to expect next based on this data).
+    4. Clear Business Recommendations.
     Dataset: ${dataset.filename}, Rows: ${dataset.rows}, Total Nulls: ${dataset.totalNulls}, Anomalies: ${dataset.anomalies.length}.
-    Use bold headers for each point. Keep it professional.
+    Use bold headers for each point and make it highly professional.
   `;
 
   return askAI({

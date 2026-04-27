@@ -2,6 +2,7 @@ import React from 'react';
 import { DropZone } from '../components/DropZone';
 import { BarChart2, Search, Zap, Brain, Globe, Lock } from 'lucide-react';
 import { AdSpace } from '../components/AdSpace';
+import { CreatorFooter } from '../components/CreatorFooter';
 import { AD_PROVIDERS } from '../config/adConfig';
 import type { Lang } from '../types';
 import logoImg from '../assets/logo.png';
@@ -138,20 +139,7 @@ export const HomePage: React.FC<Props> = ({ lang, onFile }) => {
           <AdSpace type="responsive" providers={banner1} minHeight={100} lazyLoad />
         </div>
 
-        <div className="creator-footer">
-          <p>
-            {t.creator} <strong>IBRAHIM SABREY</strong>
-          </p>
-          <div className="flex justify-center gap-4 mt-3 text-xs opacity-60">
-            <a href="mailto:ebrahimsabrey2001@gmail.com" className="hover:text-primary transition-colors flex items-center gap-1">
-              ebrahimsabrey2001@gmail.com
-            </a>
-            <span className="text-white/20">|</span>
-            <a href="https://www.linkedin.com/in/ibrahimsabrey?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-              LinkedIn
-            </a>
-          </div>
-        </div>
+        <CreatorFooter lang={lang} />
       </div>
     </div>
   );

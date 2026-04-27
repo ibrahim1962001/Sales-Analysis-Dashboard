@@ -1,11 +1,11 @@
 :root {
-  font-family: 'Inter', 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
+  font-family: 'Syne', 'Cairo', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #020617;
+  background-color: #050810;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;

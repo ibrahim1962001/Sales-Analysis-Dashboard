@@ -47,9 +47,11 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
 
     // 1) Load GAPI (needed for Picker)
     loadScript('https://apis.google.com/js/api.js', () => {
-      window.gapi.load('picker', () => {
-        if (mounted) setGapiReady(true);
-      });
+      if (window.gapi) {
+        window.gapi.load('picker', () => {
+          if (mounted) setGapiReady(true);
+        });
+      }
     });
 
     // 2) Load GIS (OAuth token client)

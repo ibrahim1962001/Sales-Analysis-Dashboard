@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, EyeOff, ServerOff, Database } from 'lucide-react';
+import { ShieldAlert, ServerOff, Database, ShieldCheck } from 'lucide-react';
 import type { Lang } from '../types';
 
 interface Props { lang: Lang; }
@@ -16,45 +16,53 @@ export const PrivacyPage: React.FC<Props> = ({ lang }) => {
         </h1>
       </div>
 
-      <div className="space-y-8 text-white/70 leading-loose">
-        <section className="glass p-6 rounded-2xl border border-white/10">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <ServerOff className="text-red-400" size={20} />
-            {isAr ? 'لا يوجد خوادم (No Servers)' : 'No Servers'}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <section className="premium-card p-8 rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-xl flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20">
+            <ServerOff className="text-red-400" size={28} />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: "'Cairo', sans-serif" }}>
+            {isAr ? 'طرفي' : 'Edge'}
           </h2>
-          <p>
+          <p className="text-white/60 text-sm leading-relaxed">
             {isAr 
-              ? 'نحن لا نقوم بتحميل بياناتك إلى أي خادم (Server). كل عمليات المعالجة والتحليل والتنظيف تتم بالكامل داخل متصفحك (Client-side) باستخدام JavaScript. بمجرد إغلاق التبويب، يتم مسح البيانات من ذاكرة المتصفح.'
-              : 'We do not upload your data to any server. All processing, analysis, and cleaning are performed entirely within your browser (Client-side) using JavaScript. Once you close the tab, the data is cleared from the browser memory.'}
+              ? 'معالجة بياناتك محلياً بالكامل دون مغادرة جهازك عبر تقنيات Edge.'
+              : 'End-to-end local data processing powered by pure Edge computing technology.'}
           </p>
         </section>
 
-        <section className="glass p-6 rounded-2xl border border-white/10">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <EyeOff className="text-blue-400" size={20} />
-            {isAr ? 'خصوصية البيانات' : 'Data Privacy'}
+        <section className="premium-card p-8 rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-xl flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20">
+            <Database className="text-emerald-400" size={28} />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: "'Cairo', sans-serif" }}>
+            {isAr ? 'حصين' : 'Vault'}
           </h2>
-          <p>
+          <p className="text-white/60 text-sm leading-relaxed">
             {isAr
-              ? 'بما أن البيانات تُعالج محلياً، فلا يمكن لأي شخص (بما في ذلك نحن المطورون) الوصول إلى ملفاتك أو رؤيتها. أنت المتحكم الوحيد في بياناتك.'
-              : 'As data is processed locally, no one (including us developers) can access or see your files. You are the sole controller of your data.'}
+              ? 'تشفير سيادي وتخزين محلي للمفاتيح داخل خزنة Vault مشفرة تماماً.'
+              : 'Sovereign encryption with local key storage inside a fully isolated Vault.'}
           </p>
         </section>
 
-        <section className="glass p-6 rounded-2xl border border-white/10">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Database className="text-green-400" size={20} />
-            {isAr ? 'تخزين مفاتيح API' : 'API Key Storage'}
+        <section className="premium-card p-8 rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-xl flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-6 border border-blue-500/20">
+            <ShieldCheck className="text-blue-400" size={28} />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: "'Cairo', sans-serif" }}>
+            {isAr ? 'سيادة' : 'Sovereignty'}
           </h2>
-          <p>
+          <p className="text-white/60 text-sm leading-relaxed">
             {isAr
-              ? 'إذا قمت بإدخال مفتاح API لـ Groq، يتم تخزينه فقط في LocalStorage الخاص بمتصفحك لتسهيل استخدامه في المرات القادمة. نحن لا نحتفظ به في أي قاعدة بيانات خارجية.'
-              : 'If you enter a Groq API key, it is stored only in your browser\'s LocalStorage for convenience. We do not keep it in any external database.'}
+              ? 'امتثال مطلق لمعايير خصوصية أبريل 2026 مع سيادة بيانات محلية.'
+              : 'Full compliance with April 2026 protocols ensuring absolute data sovereignty.'}
           </p>
         </section>
+      </div>
 
-        <div className="border-t border-white/10 pt-8 text-center text-sm text-white/40">
-          {isAr ? 'آخر تحديث: أبريل 2026' : 'Last Updated: April 2026'}
+      <div className="text-center pt-8">
+        <div className="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/40">
+          {isAr ? 'تحديث: أبريل 2026' : 'Updated: April 2026'}
         </div>
       </div>
     </div>

@@ -32,11 +32,11 @@ const T = {
     export: 'تصدير', 
     close: 'إغلاق الملف',
     clearSession: 'مسح الجلسة',
-    about: 'من نحن',
-    privacy: 'الخصوصية',
-    faq: 'الأسئلة الشائعة',
-    guide: 'الدليل',
-    compare: 'مقارنة ملفين'
+    about: 'كيان',
+    privacy: 'أمان',
+    faq: 'سؤال',
+    guide: 'دليل',
+    compare: 'مقارنة'
   },
   en: { 
     home: 'Home', 

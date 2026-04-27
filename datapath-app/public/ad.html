@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ad</title>
   <style>
-    /* Reset margins and ensure the ad fits properly without scrolling if possible */
     body, html { 
       margin: 0; 
       padding: 0; 
@@ -17,6 +16,12 @@
       justify-content: center; 
     }
   </style>
+  <script>
+    // Block any attempt by the ad script to navigate the top frame
+    if (window.top !== window.self) {
+      Object.defineProperty(window, 'top', { get: function() { return window.self; } });
+    }
+  </script>
 </head>
 <body>
   <!-- كود الإعلان الأصلي والحقيقي -->

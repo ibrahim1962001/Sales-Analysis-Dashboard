@@ -181,14 +181,15 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
         style={isMobile ? {
           // Mobile: explicit height — no aspect-ratio (Safari issues)
           width: '100%',
-          height: chart.type === 'pie' ? '280px' : '220px',
+          height: chart.type === 'pie' ? '350px' : '220px',
           padding: '0 4px',
           overflow: 'visible',
         } : {
           // Desktop: aspect-ratio based
           width: '100%',
           aspectRatio: chart.type === 'pie' ? '1 / 1' : '16 / 9',
-          maxHeight: chart.type === 'pie' ? '340px' : '300px',
+          maxHeight: chart.type === 'pie' ? '450px' : '300px',
+          minHeight: chart.type === 'pie' ? '320px' : undefined,
           padding: '0 5px',
           overflow: 'visible',
         }}

@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+
 import { analyzeDataset } from '../lib/dataUtils';
 import { DataChart } from '../components/DataChart';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Download, Filter, Plus, Trash2, Maximize2, Volume2 } from 'lucide-react';
+import { Download, Filter, Plus, Trash2, Maximize2, Volume2, FileText, Loader2 } from 'lucide-react';
 import type { DatasetInfo, Lang, ChartInfo } from '../types';
 import { generateExecutiveSummary, speakText } from '../lib/aiService';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import confetti from 'canvas-confetti';
 import { AdSpace } from '../components/AdSpace';
 import { AD_PROVIDERS } from '../config/adConfig';
 import { DataPreview } from '../components/DataPreview';
+import { CreatorFooter } from '../components/CreatorFooter';
 import { useMediaQuery } from 'react-responsive';
 
 interface Props { info: DatasetInfo; lang: Lang; }
@@ -52,6 +53,7 @@ const T = {
 export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const dashRef = useRef<HTMLDivElement>(null);
+  const chartsRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   
   // Filtering Logic
@@ -82,15 +84,38 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
       setSummary(res);
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#6366f1'] });
 
-      // تصدير كمنف إكسيل فوراً
-      const ws = XLSX.utils.aoa_to_sheet([["Kimit AI - Smart Summary"], [res]]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Summary");
-      XLSX.writeFile(wb, `${info.filename.replace(/\.[^/.]+$/, "")}_AI_Summary.xlsx`);
+      // Generate PDF after showing summary
+      setTimeout(async () => {
+        try {
+          const tempDiv = document.createElement('div');
+          tempDiv.style.padding = '30px';
+          tempDiv.style.background = '#ffffff';
+          tempDiv.style.color = '#050a14';
+          tempDiv.style.width = '800px';
+          tempDiv.style.fontFamily = '"Plus Jakarta Sans", "Noto Sans Arabic", sans-serif';
+          tempDiv.innerHTML = `<h2 style="color: #00cc88; border-bottom: 2px solid #eee; padding-bottom: 10px;">Kimit AI - Smart Summary</h2>
+                               <div style="white-space: pre-wrap; font-size: 15px; line-height: 1.8; margin-top: 20px;" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">${res}</div>`;
+          document.body.appendChild(tempDiv);
+          const canvas = await html2canvas(tempDiv, { scale: 2, useCORS: true });
+          document.body.removeChild(tempDiv);
+          
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          pdf.save(`${info.filename.replace(/\.[^/.]+$/, "")}_AI_Summary.pdf`);
+        } catch (pdfErr) {
+          console.error('PDF Generation Error:', pdfErr);
+        } finally {
+          setLoadingSummary(false);
+        }
+      }, 500);
       
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
-    } finally {
+      const msg = e instanceof Error ? e.message : String(e);
+      alert(lang === 'ar' ? 'حدث خطأ أثناء توليد الملخص: ' + msg : 'Error generating summary: ' + msg);
       setLoadingSummary(false);
     }
   };
@@ -113,13 +138,8 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
     setInfo(analyzeDataset(new File([], initialInfo.filename), filteredWorkData));
   }, [filters, initialInfo]);
 
-  // Phase 2.1: Proactive Insights
-  useEffect(() => {
-    if (!summary && !loadingSummary) {
-      handleFetchSummary();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Phase 2.1: Proactive Insights — REMOVED auto-trigger
+  // Summary is now only generated when the user clicks the button
 
   const getUniqueValues = (col: string) => {
     const vals = Array.from(new Set(initialInfo.workData.map(r => String(r[col]))));
@@ -146,16 +166,35 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
   };
 
   const handleExportPDF = async () => {
-    if (!dashRef.current) return;
+    const target = chartsRef.current || dashRef.current;
+    if (!target) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(dashRef.current, { scale: 2, backgroundColor: '#020617', logging: false, useCORS: true });
+      // Use higher scale for PDF quality
+      const canvas = await html2canvas(target, { scale: 2, backgroundColor: '#020617', logging: false, useCORS: true });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Kimit_Dashboard_${info.filename}.pdf`);
+      pdf.save(`Kimit_Charts_${info.filename}.pdf`);
+    } catch (e) {
+      console.error(e);
+    }
+    setExporting(false);
+  };
+
+  const handleExportImage = async () => {
+    const target = chartsRef.current || dashRef.current;
+    if (!target) return;
+    setExporting(true);
+    try {
+      // Direct PNG capture - much faster
+      const canvas = await html2canvas(target, { scale: 1.5, backgroundColor: '#020617', useCORS: true });
+      const link = document.createElement('a');
+      link.download = `Kimit_Charts_${info.filename}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
     } catch (e) {
       console.error(e);
     }
@@ -181,11 +220,14 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
               />
             ))}
           </div>
-          <button className="btn-primary" style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.25)' }} onClick={() => setPresentationMode(!presentationMode)}>
+          <button className="btn-primary" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }} onClick={() => setPresentationMode(!presentationMode)}>
             <Maximize2 size={16} />
           </button>
-          <button className="btn-primary" style={{ background: '#3b82f6', border: 'none' }} onClick={handleExportPDF} disabled={exporting}>
-            <Download size={16} /> {exporting ? '...' : 'PDF'}
+          <button className="btn-primary" style={{ background: '#10b981', border: 'none', boxShadow: '0 0 15px rgba(16,185,129,0.2)' }} onClick={handleExportImage} disabled={exporting}>
+            <Download size={16} /> {exporting ? '...' : (lang === 'ar' ? 'تحميل صورة' : 'IMAGE')}
+          </button>
+          <button className="btn-primary" style={{ background: '#10b981', border: 'none', opacity: 0.8 }} onClick={handleExportPDF} disabled={exporting}>
+            <FileText size={16} /> {exporting ? '...' : 'PDF'}
           </button>
         </div>
       </div>
@@ -299,9 +341,10 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
             </div>
           </div>
 
-          <div className="section-title">{t.chartsTitle}</div>
-          <div
-            className="charts-grid"
+          <div ref={chartsRef} style={{ background: '#020617', padding: '10px', borderRadius: '16px' }}>
+            <div className="section-title">{t.chartsTitle}</div>
+            <div
+              className="charts-grid"
             style={isMobile ? {
               display: 'grid',
               gridTemplateColumns: '1fr',
@@ -319,6 +362,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
             {/* On mobile show all charts — grid is 1 col so it's clean */}
             {info.charts.map((ch, i) => <DataChart key={i} chart={ch} />)}
           </div>
+        </div>
         </div>
 
          {/* Insights sidebar */}
@@ -350,9 +394,9 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
               <button 
                 onClick={handleFetchSummary} 
                 disabled={loadingSummary}
-                style={{ width: '100%', padding: '15px', background: 'rgba(16,185,129,0.1)', border: '1px dashed var(--primary)', borderRadius: '10px', color: 'var(--primary)', cursor: 'pointer', fontWeight: 700 }}
+                style={{ width: '100%', padding: '15px', background: 'rgba(16,185,129,0.1)', border: '1px dashed var(--primary)', borderRadius: '10px', color: 'var(--primary)', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
-                {loadingSummary ? '...' : (lang === 'ar' ? 'توليد ملخص ذكي فوراً ✨' : 'Generate Smart Summary ✨')}
+                {loadingSummary ? (<><Loader2 size={18} className="spin" style={{ animation: 'spin 1s linear infinite' }} /> {lang === 'ar' ? 'جاري التوليد...' : 'Generating...'}</>) : (lang === 'ar' ? 'توليد ملخص ذكي فوراً ✨' : 'Generate Smart Summary ✨')}
               </button>
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -414,6 +458,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
         </div>
       </div>
       </div>
+      <CreatorFooter lang={lang} />
     </div>
   );
 };
