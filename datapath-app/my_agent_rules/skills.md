@@ -395,4 +395,4 @@
 343. Founder-Level Ownership: Thinking beyond the task.
 344. Pattern Transfer: Applying solutions across industries.
 345. Creative Engineering: Blending logic with invention.
- Unfair Advantage Design: Building things hard to compete with.
+346. Unfair Advantage Design: Building things hard to compete with.

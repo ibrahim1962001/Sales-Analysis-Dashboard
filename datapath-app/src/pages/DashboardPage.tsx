@@ -247,12 +247,23 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
       <style>{`
         .glass-panel { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; backdrop-filter: blur(10px); }
         .glass-card { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; }
-        .premium-button { display: flex; align-items: center; gap: 8; background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+        .premium-button { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
         .premium-button:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3); }
         .premium-button.secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
         .kimit-select { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; }
         .action-row-btn { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; color: #cbd5e1; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .action-row-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+        @media (max-width: 768px) {
+          .dash-layout-container { padding: 16px !important; }
+          .dash-header-wrap { flex-direction: column; align-items: stretch; gap: 16px; }
+          .actions-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+          .premium-button { width: 100% !important; height: 48px; }
+          .kpi-mini-row { grid-template-columns: 1fr !important; }
+          .dash-main-grid { grid-template-columns: 1fr !important; }
+          .sidebar-analytics { grid-template-columns: 1fr !important; }
+          .charts-display-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </div>
   );
