@@ -156,7 +156,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
                  <option value="">Y-Axis</option>
                  {info.columns.filter(c => c.type === 'numeric').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                </select>
-               <select className="kimit-select" value={builder.type} onChange={e => setBuilder({...builder, type: e.target.value as any})}>
+               <select className="kimit-select" value={builder.type} onChange={e => setBuilder({...builder, type: e.target.value as ChartInfo['type']})}>
                  <option value="bar">Bar Chart</option>
                  <option value="line">Line Chart</option>
                  <option value="pie">Pie Chart</option>
