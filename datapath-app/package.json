@@ -20,6 +20,7 @@
     "canvas-confetti": "^1.9.4",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
+    "exceljs": "^4.4.0",
     "firebase": "^10.14.1",
     "framer-motion": "^12.38.0",
     "gapi-script": "^1.2.0",
