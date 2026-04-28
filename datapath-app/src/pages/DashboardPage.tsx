@@ -96,7 +96,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
           <p className="page-sub">{info.filename} • {info.rows.toLocaleString()} {t.records}</p>
         </div>
         
-        <div className="actions-group">
+        <div className="actions-group" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button className="premium-button secondary" onClick={handleExcel}>
              <Database size={16} /> Excel
           </button>
@@ -115,16 +115,16 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
         <div className="main-analytics-flow" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* KPI Mini Row */}
-          <div className="kpi-mini-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
-            <div className="glass-card p-4" style={{ textAlign: 'center' }}>
+          <div className="kpi-mini-row">
+            <div className="glass-card" style={{ textAlign: 'center', padding: '16px' }}>
                <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '24px' }}>{info.rows}</div>
                <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase' }}>{t.records}</div>
             </div>
-            <div className="glass-card p-4" style={{ textAlign: 'center' }}>
+            <div className="glass-card" style={{ textAlign: 'center', padding: '16px' }}>
                <div style={{ color: '#38bdf8', fontWeight: 800, fontSize: '24px' }}>{info.columns.length}</div>
                <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase' }}>{t.columns}</div>
             </div>
-            <div className="glass-card p-4" style={{ textAlign: 'center' }}>
+            <div className="glass-card" style={{ textAlign: 'center', padding: '16px' }}>
                <div style={{ color: health.color, fontWeight: 800, fontSize: '24px' }}>{health.score}%</div>
                <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase' }}>{health.label}</div>
             </div>
@@ -255,14 +255,17 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
         .action-row-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
 
         @media (max-width: 768px) {
-          .dash-layout-container { padding: 16px !important; }
-          .dash-header-wrap { flex-direction: column; align-items: stretch; gap: 16px; }
-          .actions-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-          .premium-button { width: 100% !important; height: 48px; }
+          .dash-layout-container { padding: 12px 10px !important; }
+          .dash-header-wrap { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+          .actions-group { flex-direction: column !important; gap: 10px !important; width: 100% !important; }
+          .actions-group .premium-button { width: 100% !important; height: 48px !important; justify-content: center !important; }
           .kpi-mini-row { grid-template-columns: 1fr !important; }
-          .dash-main-grid { grid-template-columns: 1fr !important; }
-          .sidebar-analytics { grid-template-columns: 1fr !important; }
-          .charts-display-grid { grid-template-columns: 1fr !important; }
+          .dash-main-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+          .main-analytics-flow { gap: 14px !important; }
+          .sidebar-analytics { width: 100% !important; }
+          .charts-display-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .glass-panel { padding: 12px !important; }
+          .builder-controls { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

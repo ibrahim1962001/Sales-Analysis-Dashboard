@@ -78,11 +78,11 @@ export const HomePage: React.FC<Props> = ({ lang, onFile }) => {
             style={{
               width: '90px',
               height: '90px',
-              objectFit: 'cover',
-              objectPosition: 'top',
+              objectFit: 'contain',
+              objectPosition: 'center',
               mixBlendMode: 'screen',
-              filter: 'brightness(1.25) contrast(1.05) saturate(1.1)',
-              borderRadius: '16px',
+              filter: 'brightness(1.3) contrast(1.05) saturate(1.1)',
+              borderRadius: '0',
               background: 'transparent',
             }}
           />
