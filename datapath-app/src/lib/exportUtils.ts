@@ -46,19 +46,28 @@ export const exportToExcel = (data: DataRow[], filename = 'Kimit_Data.xlsx'): vo
 // ─────────────────────────────────────────────
 //  Power BI — Optimised CSV Export
 //  Adds a header row with proper BOM so Power BI detects UTF-8
+//  Enforces sanitized headers and ISO date strings.
 // ─────────────────────────────────────────────
 export const exportPowerBICSV = (data: DataRow[], filename = 'Kimit_PowerBI.csv'): void => {
   if (data.length === 0) return;
   const headers = Object.keys(data[0]);
-  const escape = (v: string | number | null): string => {
+  const sanitizedHeaders = headers.map(h => h.trim().replace(/[^a-zA-Z0-9_]/g, '_'));
+  
+  const escape = (v: unknown): string => {
+    if (v instanceof Date) return v.toISOString();
     const s = String(v ?? '');
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(s)) {
+      return new Date(s).toISOString();
+    }
     return s.includes(',') || s.includes('"') || s.includes('\n')
       ? `"${s.replace(/"/g, '""')}"` : s;
   };
+  
   const rows = [
-    headers.join(','),
+    sanitizedHeaders.join(','),
     ...data.map(row => headers.map(h => escape(row[h])).join(',')),
   ];
+  
   // BOM for Power BI UTF-8 auto-detect
   const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
