@@ -9,11 +9,12 @@ import type { DataRow, ChartConfig } from '../../types/index';
 interface AnalysisChartProps {
   data: DataRow[];
   config: ChartConfig;
+  onFilter?: (column: string, value: string) => void;
 }
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-const ChartRenderer: React.FC<AnalysisChartProps> = ({ data, config }) => {
+const ChartRenderer: React.FC<AnalysisChartProps> = ({ data, config, onFilter }) => {
   // Aggregate data if needed (simple aggregation for demo)
   const chartData = useMemo(() => {
     // If pie or bar, aggregate by xAxisKey
@@ -33,22 +34,34 @@ const ChartRenderer: React.FC<AnalysisChartProps> = ({ data, config }) => {
     throw new Error("Insufficient data to render chart");
   }
 
+  const handleChartClick = (state: any) => {
+    if (!onFilter) return;
+    if (state && state.activeLabel) {
+      onFilter(config.xAxisKey, state.activeLabel);
+    }
+  };
+
+  const handlePieClick = (data: any) => {
+    if (!onFilter || !data) return;
+    onFilter(config.xAxisKey, data.name);
+  };
+
   const renderChart = () => {
     switch (config.type) {
       case 'bar':
         return (
-          <BarChart data={chartData}>
+          <BarChart data={chartData} onClick={handleChartClick} style={{cursor: onFilter ? 'pointer' : 'default'}}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="name" stroke="#cbd5e1" fontSize={12} />
             <YAxis stroke="#cbd5e1" fontSize={12} />
-            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
+            <Tooltip cursor={{fill: 'rgba(255,255,255,0.1)'}} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
             <Legend verticalAlign="bottom" height={36} />
             <Bar dataKey="value" name={config.yAxisKey} fill={config.color || COLORS[0]} radius={[4, 4, 0, 0]} />
           </BarChart>
         );
       case 'line':
         return (
-          <LineChart data={chartData}>
+          <LineChart data={chartData} onClick={handleChartClick} style={{cursor: onFilter ? 'pointer' : 'default'}}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey={config.xAxisKey} stroke="#cbd5e1" fontSize={12} />
             <YAxis stroke="#cbd5e1" fontSize={12} />
@@ -72,6 +85,8 @@ const ChartRenderer: React.FC<AnalysisChartProps> = ({ data, config }) => {
               paddingAngle={2}
               dataKey="value"
               label={false}
+              onClick={handlePieClick}
+              style={{cursor: onFilter ? 'pointer' : 'default'}}
             >
               {chartData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -81,7 +96,7 @@ const ChartRenderer: React.FC<AnalysisChartProps> = ({ data, config }) => {
         );
       case 'scatter':
         return (
-          <ScatterChart>
+          <ScatterChart onClick={handleChartClick} style={{cursor: onFilter ? 'pointer' : 'default'}}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey={config.xAxisKey} name={config.xAxisKey} stroke="#cbd5e1" fontSize={12} />
             <YAxis dataKey={config.yAxisKey} name={config.yAxisKey} stroke="#cbd5e1" fontSize={12} />

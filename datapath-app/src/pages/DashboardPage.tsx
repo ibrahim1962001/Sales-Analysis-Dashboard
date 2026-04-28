@@ -11,7 +11,8 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { AdSpace } from '../components/AdSpace';
 import { AD_PROVIDERS } from '../config/adConfig';
-import { DataPreview } from '../components/DataPreview';
+import { DataGrid } from '../components/Analysis/DataGrid';
+import { DataWranglerUI } from '../components/DataWranglerUI';
 import { CreatorFooter } from '../components/CreatorFooter';
 import { useMediaQuery } from 'react-responsive';
 import { Copy, AlertTriangle, AlertCircle, Lightbulb, TrendingUp, CheckCircle, Brain } from 'lucide-react';
@@ -66,6 +67,7 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
   const [builder, setBuilder] = useState<{ x: string; y: string; type: ChartInfo['type'] }>({ x: '', y: '', type: 'bar' });
 
   // Advanced Features
+  const [activeChartFilter, setActiveChartFilter] = useState<string>('');
   const [presentationMode, setPresentationMode] = useState(false);
   const [theme, setTheme] = useState('emerald');
   const [summary, setSummary] = useState<SummaryReport | null>(null);
@@ -76,6 +78,10 @@ export const DashboardPage: React.FC<Props> = ({ info: initialInfo, lang }) => {
   // providers منفصلة لكل بانر
   const topAdProvider = AD_PROVIDERS.filter(p => p.id === 'native_banner');
   const sidebarAdProvider = AD_PROVIDERS.filter(p => p.id === 'social_banner');
+
+  const handleChartClick = (_col: string, val: string) => {
+    setActiveChartFilter(val);
+  };
 
   const handleFetchSummary = async () => {
     const apiKey = localStorage.getItem('groq_key') || undefined;
@@ -299,7 +305,17 @@ ${summary.opportunities.map(i => '- ' + i).join('\n')}
         
         {/* Quick Preview Section */}
         <div className="dashboard-preview-section" style={{ padding: '0 20px', marginBottom: '20px' }}>
-          <DataPreview data={info.workData} lang={lang} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+             <h4 style={{ color: '#10b981', margin: 0 }}>{t.chartsTitle} & Interactive Data Grid (Virtual Table)</h4>
+             {activeChartFilter && (
+               <button onClick={() => setActiveChartFilter('')} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer' }}>
+                 {t.clearFilters} ({activeChartFilter})
+               </button>
+             )}
+          </div>
+          <div style={{ height: '400px', width: '100%', background: 'var(--card-bg)', borderRadius: '12px' }}>
+             <DataGrid data={info.workData} columns={info.columns.map(c => c.name)} externalFilter={activeChartFilter} />
+          </div>
         </div>
 
         {/* Live Slicers Bar */}
@@ -408,14 +424,14 @@ ${summary.opportunities.map(i => '- ' + i).join('\n')}
           >
             {customCharts.map((ch, i) => (
               <div key={`custom-${i}`} style={{ position: 'relative' }}>
-                 <DataChart chart={ch} />
+                 <DataChart chart={ch} onFilterClick={handleChartClick} />
                  <button onClick={() => setCustomCharts(customCharts.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(239, 68, 68, 0.2)', border: 'none', color: '#ef4444', padding: 4, borderRadius: 4, cursor: 'pointer' }}>
                     <Trash2 size={14} />
                  </button>
               </div>
             ))}
             {/* On mobile show all charts — grid is 1 col so it's clean */}
-            {info.charts.map((ch, i) => <DataChart key={i} chart={ch} />)}
+            {info.charts.map((ch, i) => <DataChart key={i} chart={ch} onFilterClick={handleChartClick} />)}
           </div>
         </div>
         </div>
@@ -432,6 +448,10 @@ ${summary.opportunities.map(i => '- ' + i).join('\n')}
                 {healthPercent}%
               </div>
               <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 5 }}>مؤشر جودة ونظافة البيانات</p>
+            </div>
+
+            <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+              <DataWranglerUI data={info.workData} columns={info.columns.map(c => c.name)} onDataTransformed={(newData) => setInfo({ ...info, workData: newData })} />
             </div>
 
             {/* Side Square Ad */}

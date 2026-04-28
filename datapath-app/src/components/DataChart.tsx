@@ -7,11 +7,11 @@ import type { ForecastResult } from '../lib/statService';
 import { useState } from 'react';
 import { useMediaQuery } from 'react-responsive';
 
-interface Props { chart: ChartInfo; }
+interface Props { chart: ChartInfo; onFilterClick?: (column: string, value: string) => void; }
 
 const COLORS = ['#10b981', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#3b82f6'];
 
-export const DataChart: React.FC<Props> = ({ chart }) => {
+export const DataChart: React.FC<Props> = ({ chart, onFilterClick }) => {
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const chartRef = useRef<ReactECharts>(null);
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
@@ -22,12 +22,24 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
     setForecast(res);
   };
 
+  const onChartClick = (e: any) => {
+    if (onFilterClick && e.name) {
+      // The chart.xAxisKey is usually used for groupings
+      // We pass the column name and the value to filter by
+      // The chart.xAxisKey is usually used for groupings
+      // Actually, e.name is the X value
+      // But we need the real column name. Currently ChartInfo doesn't explicitly store the raw source column,
+      // but let's assume `x` represents the grouping column. DashboardPage manages filters.
+      onFilterClick(chart.title, e.name);
+    }
+  };
+
   const download = useCallback(() => {
     const echartsInstance = chartRef.current?.getEchartsInstance();
     if (!echartsInstance) return;
     const url = echartsInstance.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0f172a' });
     const link = document.createElement('a');
-    link.download = `${chart.title.replace(/\s+/g, '_')}.png`;
+    link.download = `${chart.title.replace(/\\s+/g, '_')}.png`;
     link.href = url;
     link.click();
   }, [chart.title]);
@@ -107,7 +119,7 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
         center: ['40%', '50%'],
         itemStyle: { borderRadius: 5, borderColor: '#0f172a', borderWidth: 2 },
         label: { show: false }, // Use Tooltip instead of inside labels for cleaner look
-        emphasis: { label: { show: false } },
+        emphasis: { label: { show: false }, itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } },
         data: chart.data.map((d, i) => ({
           name: String(d.x).slice(0, 20),
           value: Number(d.y),
@@ -203,6 +215,7 @@ export const DataChart: React.FC<Props> = ({ chart }) => {
           style={{ height: '100%', width: '100%' }}
           notMerge={true}
           lazyUpdate={true}
+          onEvents={{ click: onChartClick }}
         />
       </div>
     </div>

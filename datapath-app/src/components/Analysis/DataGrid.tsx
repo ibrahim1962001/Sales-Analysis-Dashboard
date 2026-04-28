@@ -15,11 +15,18 @@ import type { DataRow } from '../../types/index';
 interface DataGridProps {
   data: DataRow[];
   columns: string[];
+  externalFilter?: string;
 }
 
-export const DataGrid: React.FC<DataGridProps> = ({ data, columns }) => {
+export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilter }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+
+  React.useEffect(() => {
+    if (externalFilter !== undefined) {
+      setGlobalFilter(externalFilter);
+    }
+  }, [externalFilter]);
 
   const tableColumns = useMemo<ColumnDef<DataRow>[]>(() => 
     columns.map((col) => ({
