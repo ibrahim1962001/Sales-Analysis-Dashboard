@@ -16,16 +16,19 @@ export const AnalysisModule: React.FC = () => {
   const [data, setData] = useState<DataRow[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [healthStatus, setHealthStatus] = useState<string>('UNKNOWN');
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Compute stats and anomalies independent of rendering
+  useEffect(() => {
+    const checkSize = () => setIsMobile(window.innerWidth < 1024);
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+
   const { metadata, anomalies, healthScore } = useAnalytics(data, columns);
-
-  // New Kimit Extra Features
   const { isGeneratingInsights, insights, generateInsights, parseNlqQuery } = useKimitExtra(data, columns);
-  const [nlqFilter, setNlqFilter] = useState<Array<{ id: string, value: { operator: string, value: string } }> | null>(null); // Passed down to Grid if supported, or handled here
+  const [nlqFilter, setNlqFilter] = useState<Array<{ id: string, value: { operator: string, value: string } }> | null>(null);
 
-  // Simple client-side filtering based on NLQ (if DataGrid supports external data modification)
-  // For safety, we'll apply it directly to the data passed to DataGrid
   const filteredData = React.useMemo(() => {
     if (!nlqFilter || nlqFilter.length === 0) return data;
     const { id, value: { operator, value } } = nlqFilter[0];
@@ -47,7 +50,6 @@ export const AnalysisModule: React.FC = () => {
     });
   }, [data, nlqFilter]);
 
-  // Run System Health Check on mount
   useEffect(() => {
     runSystemHealthCheck().then(res => setHealthStatus(res.status));
   }, []);
@@ -59,12 +61,9 @@ export const AnalysisModule: React.FC = () => {
     try {
       const result = await parseFile(file);
       validateDataset(result);
-
       setData(result.data);
       setColumns(result.columns);
       setNlqFilter(null);
-      
-      // Auto-generate AI insights when data loads
       generateInsights({ rows: result.data.length, cols: result.columns.length });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -83,17 +82,24 @@ export const AnalysisModule: React.FC = () => {
   };
 
   return (
-    <div className="analysis-module" id="dashboard-export-area" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', height: '100vh', background: 'var(--bg-color)', color: '#fff' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-        <h2>Strict Modular Analysis Engine</h2>
+    <div className="analysis-module" style={{ padding: isMobile ? '10px' : '30px', display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '100vh', background: 'var(--bg-color)', color: '#fff' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h2 style={{ fontSize: isMobile ? '18px' : '24px', fontWeight: 800 }}>Kimit Analysis Engine</h2>
+          <span style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '100px', background: healthStatus === 'HEALTHY' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: healthStatus === 'HEALTHY' ? '#10b981' : '#ef4444', border: healthStatus === 'HEALTHY' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)' }}>
+            {healthStatus}
+          </span>
+        </div>
+        
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
           <SmartFilter onSearch={handleSmartSearch} />
           
-          <span style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: healthStatus === 'HEALTHY' ? '#10b981' : '#ef4444' }}>
-            System: {healthStatus}
-          </span>
-          <input type="file" accept=".csv" onChange={handleFileUpload} disabled={isParsing} />
-          {isParsing && <span style={{ color: '#3b82f6' }}>Parsing in Background...</span>}
+          <div style={{ position: 'relative' }}>
+            <input type="file" accept=".csv" onChange={handleFileUpload} disabled={isParsing} style={{ position: 'absolute', opacity: 0, inset: 0, cursor: 'pointer' }} />
+            <button className="premium-button" style={{ fontSize: '13px', padding: '10px 20px' }}>
+              {isParsing ? 'Parsing...' : 'Upload CSV'}
+            </button>
+          </div>
           
           {data.length > 0 && (
             <ExportActions data={filteredData} columns={columns} elementIdToCapture="dashboard-export-area" />
@@ -102,72 +108,98 @@ export const AnalysisModule: React.FC = () => {
       </header>
 
       {parseError && (
-        <div style={{ color: '#ef4444', padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px' }}>
+        <div style={{ color: '#ef4444', padding: '15px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           Parser Error: {parseError}
         </div>
       )}
 
       {data.length === 0 && !isParsing && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          <p style={{ marginTop: '16px', fontSize: '18px' }}>Upload a CSV file to begin analysis</p>
+          <div style={{ padding: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', marginBottom: '20px' }}>
+             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          </div>
+          <p style={{ fontSize: '18px', fontWeight: 600 }}>Drop your CSV here to start analysis</p>
+          <p style={{ color: 'var(--text-dim)', marginTop: '8px' }}>AI will automatically profile your data</p>
         </div>
       )}
 
       {isParsing && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ animation: 'pulse 1.5s infinite', background: 'rgba(255,255,255,0.05)', height: '100px', borderRadius: '8px' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', flex: 1 }}>
-             <div style={{ animation: 'pulse 1.5s infinite', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }} />
-             <div style={{ animation: 'pulse 1.5s infinite', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }} />
+          <div style={{ animation: 'pulse 1.5s infinite', background: 'rgba(255,255,255,0.05)', height: '100px', borderRadius: '12px' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 350px', gap: '20px', flex: 1 }}>
+             <div style={{ animation: 'pulse 1.5s infinite', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', minHeight: '400px' }} />
+             <div style={{ animation: 'pulse 1.5s infinite', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }} />
           </div>
         </div>
       )}
 
       {data.length > 0 && !isParsing && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', flex: 1, overflow: 'hidden' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 350px', 
+          gap: '24px', 
+          flex: 1,
+          alignItems: 'start'
+        }}>
           
-          {/* Module B: Virtualized Grid wrapped in Error Boundary */}
-          <ErrorBoundary moduleName="Data Grid">
-            <DataGrid data={filteredData} columns={columns} />
-          </ErrorBoundary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
+            {/* Module B: Data Grid */}
+            <div className="glass-panel" style={{ height: isMobile ? '50vh' : '65vh', padding: 0, overflow: 'hidden' }}>
+              <ErrorBoundary moduleName="Data Grid">
+                <DataGrid data={filteredData} columns={columns} />
+              </ErrorBoundary>
+            </div>
 
-          {/* Sidebar logic */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' }}>
+            {/* Module D: Charts */}
+            <div className="glass-panel" style={{ padding: isMobile ? '15px' : '24px' }}>
+              <ErrorBoundary moduleName="Visualizations">
+                <AnalysisChart 
+                  data={filteredData} 
+                  config={{ 
+                    type: 'bar', 
+                    xAxisKey: columns[0] || 'Unknown', 
+                    yAxisKey: columns.find(c => metadata.find(m => m.name === c)?.type === 'numeric') || columns[1] || 'Unknown', 
+                    title: 'Analysis Overview' 
+                  }} 
+                />
+              </ErrorBoundary>
+            </div>
+          </div>
+
+          {/* Sidebar / Insights */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
-            {/* AI Insight Summary Module */}
             <ErrorBoundary moduleName="AI Storyteller">
               <InsightSummary insights={insights} isLoading={isGeneratingInsights} />
             </ErrorBoundary>
 
-            {/* Logic Results */}
             <ErrorBoundary moduleName="Health Score">
-              <div style={{ background: 'var(--card-bg, rgba(255,255,255,0.03))', padding: '15px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <h3>Data Health Score</h3>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: healthScore?.score && healthScore.score > 80 ? '#10b981' : '#f59e0b' }}>
-                  {healthScore?.score}%
+              <div className="glass-panel" style={{ padding: '24px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Data Integrity</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{ fontSize: '42px', fontWeight: 900, color: healthScore?.score && healthScore.score > 80 ? '#10b981' : '#f59e0b' }}>
+                    {healthScore?.score}%
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>
+                    Overall dataset reliability score
+                  </div>
                 </div>
-                <div style={{ marginTop: '10px' }}>
-                  {healthScore?.issues.map((issue, idx) => <p key={idx} style={{ fontSize: '12px', color: '#ef4444', margin: '4px 0' }}>- {issue}</p>)}
-                </div>
+                {healthScore?.issues && healthScore.issues.length > 0 && (
+                  <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {healthScore.issues.map((issue, idx) => (
+                      <div key={idx} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', fontSize: '11px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                        ⚠️ {issue}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {anomalies && anomalies.length > 0 && (
-                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#f59e0b' }}>
-                    <p>Detected {anomalies.length} outliers.</p>
+                  <div style={{ marginTop: '16px', padding: '10px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.05)', color: '#f59e0b', fontSize: '11px', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+                    Outliers: {anomalies.length} detected
                   </div>
                 )}
               </div>
             </ErrorBoundary>
-
-            {/* Module D: Charts wrapped in Error Boundary */}
-            <ErrorBoundary moduleName="Visualizations">
-              <div style={{ background: 'var(--card-bg, rgba(255,255,255,0.03))', padding: '15px', borderRadius: '8px', border: '1px solid var(--border)', height: '300px' }}>
-                <AnalysisChart 
-                  data={filteredData} 
-                  config={{ type: 'bar', xAxisKey: columns[0] || 'Unknown', yAxisKey: columns.find(c => metadata.find(m => m.name === c)?.type === 'numeric') || columns[1] || 'Unknown', title: 'Distribution Overview' }} 
-                />
-              </div>
-            </ErrorBoundary>
-
           </div>
         </div>
       )}

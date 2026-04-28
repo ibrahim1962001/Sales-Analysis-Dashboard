@@ -1,5 +1,5 @@
 "use no memo";
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -22,6 +22,14 @@ interface DataGridProps {
 export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilter }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkSize = () => setIsMobile(window.innerWidth < 768);
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
 
   React.useEffect(() => {
     if (externalFilter !== undefined) {
@@ -30,7 +38,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
   }, [externalFilter]);
 
   const tableColumns = useMemo<ColumnDef<DataRow>[]>(() => 
-    columns.map((col) => ({
+    columns.map((col, index) => ({
       accessorKey: col,
       header: () => (
         <div style={{ textAlign: 'left', width: '100%' }}>
@@ -38,13 +46,13 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
           <SmartProfiler columnName={col} data={data} />
         </div>
       ),
-      size: 180, // Optimized width for profiler visibility
+      size: index === 0 ? (isMobile ? 120 : 180) : 180,
       cell: info => {
         const val = info.getValue();
         return typeof val === 'number' ? Number(val.toFixed(4)) : String(val ?? '');
       }
     })),
-  [columns, data]);
+  [columns, data, isMobile]);
 
   const table = useReactTable({
     data,
@@ -63,7 +71,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 52, // Slightly taller for better readability
+    estimateSize: () => 52,
     overscan: 10,
   });
 
@@ -76,32 +84,38 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
   }
 
   return (
-    <div className="grid-module">
-      <div className="grid-toolbar">
+    <div className="grid-module" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div className="grid-toolbar" style={{ padding: isMobile ? '10px' : '15px 20px', gap: isMobile ? '10px' : '20px' }}>
         <input 
           type="text" 
           value={globalFilter ?? ''} 
           onChange={e => setGlobalFilter(e.target.value)} 
-          placeholder="Search all columns..."
+          placeholder="Search columns..."
           className="grid-search"
+          style={{ flex: 1, minWidth: 0 }}
         />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 500 }}>
-            <b style={{ color: 'var(--primary)' }}>{rows.length}</b> records found
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+          <span style={{ color: '#94a3b8', fontSize: isMobile ? '10px' : '12px', fontWeight: 500 }}>
+            <b style={{ color: 'var(--primary)' }}>{rows.length}</b> records
           </span>
         </div>
       </div>
       
       <div 
         ref={tableContainerRef} 
-        style={{ overflow: 'auto', flex: 1, position: 'relative' }}
+        style={{ 
+          overflow: 'auto', 
+          flex: 1, 
+          position: 'relative',
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
         <div style={{ width: 'fit-content', minWidth: '100%' }}>
           {/* Header */}
-          <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#0f172a', borderBottom: '2px solid #1e293b', display: 'flex' }}>
+          <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#0a0f1d', borderBottom: '2px solid #1e293b', display: 'flex' }}>
             {table.getHeaderGroups().map(headerGroup => (
               <React.Fragment key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
+                {headerGroup.headers.map((header, idx) => (
                   <div 
                     key={header.id} 
                     onClick={header.column.getToggleSortingHandler()}
@@ -112,7 +126,12 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
                       cursor: header.column.getCanSort() ? 'pointer' : 'default', 
                       whiteSpace: 'nowrap',
                       display: 'flex',
-                      flexDirection: 'column'
+                      flexDirection: 'column',
+                      position: idx === 0 ? 'sticky' : 'relative',
+                      left: idx === 0 ? 0 : 'auto',
+                      zIndex: idx === 0 ? 30 : 1,
+                      background: '#0a0f1d',
+                      boxShadow: idx === 0 ? '4px 0 8px rgba(0,0,0,0.3)' : 'none'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -141,14 +160,13 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
                     height: `${virtualRow.size}px`, 
                     transform: `translateY(${virtualRow.start}px)`,
                     borderBottom: '1px solid #1e293b',
-                    background: virtualRow.index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
+                    background: virtualRow.index % 2 === 0 ? '#050810' : '#0a0f1d',
                     display: 'flex',
                     transition: 'background 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = virtualRow.index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'}
+                  className="grid-row-container"
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell, idx) => (
                     <div 
                       key={cell.id} 
                       className="grid-cell"
@@ -159,7 +177,12 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
                         overflow: 'hidden', 
                         textOverflow: 'ellipsis', 
                         display: 'flex', 
-                        alignItems: 'center' 
+                        alignItems: 'center',
+                        position: idx === 0 ? 'sticky' : 'relative',
+                        left: idx === 0 ? 0 : 'auto',
+                        zIndex: idx === 0 ? 15 : 1,
+                        background: 'inherit',
+                        boxShadow: idx === 0 ? '4px 0 8px rgba(0,0,0,0.3)' : 'none'
                       }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
