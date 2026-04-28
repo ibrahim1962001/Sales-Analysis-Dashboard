@@ -1298,8 +1298,97 @@ html, body, #root {
 @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 
 /* =========================================
-   RESPONSIVE & MOBILE (AMAZON STYLE)
+   RESPONSIVE DATA GRID
 ========================================= */
+.grid-module {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #020617;
+}
+
+.grid-toolbar {
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.8);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.grid-search {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0f172a;
+  color: #f1f5f9;
+  width: 280px;
+  font-size: 13px;
+  outline: none;
+}
+
+.grid-header-cell {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #94a3b8;
+  background: #0f172a;
+}
+
+.grid-cell {
+  padding: 0 16px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+  .grid-toolbar { padding: 10px; }
+  .grid-search { width: 100%; }
+  .grid-header-cell { padding: 8px 10px; font-size: 11px; }
+  .grid-cell { padding: 0 10px; font-size: 11px; }
+}
+
+/* =========================================
+   DASHBOARD RESPONSIVE
+========================================= */
+.dash-layout-container {
+  padding: 20px;
+  background: #020617;
+  min-height: 100vh;
+}
+
+.dash-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.dash-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 74%) 24%;
+  gap: 2%;
+}
+
+.charts-display-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+@media (max-width: 900px) {
+  .dash-main-grid { grid-template-columns: 1fr; gap: 20px; }
+  .charts-display-grid { grid-template-columns: 1fr; }
+  .dash-layout-container { padding: 15px 10px; }
+  .dash-header-wrap { flex-direction: column; align-items: flex-start; }
+}
+
 
 /* Desktop Default (Sidebar & Fluid Layout) */
 @media (min-width: 992px) {
@@ -1649,39 +1738,58 @@ html, body, #root {
     justify-content: space-between;
     padding: 0 16px;
     height: 60px;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+    background: rgba(10, 15, 30, 0.8);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 2000;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
   }
 
   .mobile-logo-small {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-weight: 800;
-    font-size: 16px;
+    font-size: 17px;
     color: #fff;
+    letter-spacing: -0.5px;
   }
   .mobile-logo-small img {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     object-fit: contain;
+    filter: drop-shadow(0 0 8px var(--primary-glow));
+  }
+  .mobile-version-tag {
+    font-size: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 900;
+    box-shadow: 0 0 10px var(--primary-glow);
   }
 
   .mobile-menu-btn-icon {
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--primary);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px;
+    padding: 8px;
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+  .mobile-menu-btn-icon:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .mobile-sidebar-overlay {

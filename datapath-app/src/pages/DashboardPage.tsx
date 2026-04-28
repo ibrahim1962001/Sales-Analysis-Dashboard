@@ -10,7 +10,7 @@ import { TransformationTimeline } from '../components/Analysis/TransformationTim
 import { CreatorFooter } from '../components/CreatorFooter';
 import { exportBrandedPDF, exportToExcel } from '../lib/exportUtils';
 import { generateAInarrative } from '../lib/narrativeEngine';
-import { useMediaQuery } from 'react-responsive';
+
 
 interface Props { lang: Lang; }
 
@@ -38,7 +38,6 @@ const T = {
 };
 
 export const DashboardPage: React.FC<Props> = ({ lang }) => {
-  const isMobile = useMediaQuery({ maxWidth: 768 });
   const { info } = useKimitData();
   const { removeDuplicates, fillMissingValues, getHealthStats } = useKimitEngine();
   
@@ -81,10 +80,10 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
   };
 
   return (
-    <div className="page" id="dashboard-main-content" style={{ background: '#020617', minHeight: '100vh', padding: '20px' }}>
+    <div className="dash-layout-container">
       
       {/* 1. Header & Undo Engine */}
-      <div className="dashboard-header" style={{ marginBottom: '20px' }}>
+      <div className="dash-header-wrap">
         <div className="title-group">
           <motion.h2 
             initial={{ opacity: 0, x: -20 }} 
@@ -97,7 +96,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
           <p className="page-sub">{info.filename} • {info.rows.toLocaleString()} {t.records}</p>
         </div>
         
-        <div className="actions-group" style={{ display: 'flex', gap: 12 }}>
+        <div className="actions-group">
           <button className="premium-button secondary" onClick={handleExcel}>
              <Database size={16} /> Excel
           </button>
@@ -110,7 +109,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
 
       <TransformationTimeline />
 
-      <div className="dash-content-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 74%) 24%', gap: '2%' }}>
+      <div className="dash-main-grid">
         
         {/* Left Column: Data & Charts */}
         <div className="main-analytics-flow" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -164,7 +163,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
                <button className="premium-button" onClick={handleAddCustomChart}><Plus size={16} /> Add</button>
             </div>
 
-            <div className="charts-display-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+            <div className="charts-display-grid">
                {customCharts.map((ch, i) => (
                  <div key={i} className="relative group">
                    <DataChart chart={ch} onFilterClick={(_, v) => setActiveChartFilter(v)} />

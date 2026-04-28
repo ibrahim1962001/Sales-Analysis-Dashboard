@@ -167,7 +167,7 @@ function App() {
             onError={(e) => { (e.target as HTMLImageElement).src = "https://img.icons8.com/clouds/200/egyptian-pyramids.png"; }}
           />
           <span>Kimit AI Studio</span>
-          <span style={{ fontSize: '10px', background: 'var(--primary)', color: '#000', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', fontWeight: 'bold' }}>v2.1</span>
+          <span className="mobile-version-tag">v2.1</span>
         </div>
         <button className="mobile-menu-btn-icon" onClick={() => setMobileMenuOpen(true)}>
           <Menu size={24} />

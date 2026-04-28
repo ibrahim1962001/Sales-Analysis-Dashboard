@@ -76,14 +76,14 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
   }
 
   return (
-    <div className="grid-module" style={{ display: 'flex', flexDirection: 'column', height: '100%', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: '#020617' }}>
-      <div className="grid-toolbar" style={{ padding: '12px 16px', background: 'rgba(15, 23, 42, 0.8)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="grid-module">
+      <div className="grid-toolbar">
         <input 
           type="text" 
           value={globalFilter ?? ''} 
           onChange={e => setGlobalFilter(e.target.value)} 
           placeholder="Search all columns..."
-          style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: '#0f172a', color: '#f1f5f9', width: '280px', fontSize: '13px' }}
+          className="grid-search"
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 500 }}>
@@ -105,13 +105,11 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
                   <div 
                     key={header.id} 
                     onClick={header.column.getToggleSortingHandler()}
+                    className="grid-header-cell"
                     style={{ 
                       width: header.column.getSize(), 
                       minWidth: header.column.getSize(),
-                      padding: '12px 16px', 
                       cursor: header.column.getCanSort() ? 'pointer' : 'default', 
-                      fontSize: '13px', 
-                      color: '#94a3b8', 
                       whiteSpace: 'nowrap',
                       display: 'flex',
                       flexDirection: 'column'
@@ -153,12 +151,10 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, columns, externalFilte
                   {row.getVisibleCells().map(cell => (
                     <div 
                       key={cell.id} 
+                      className="grid-cell"
                       style={{ 
                         width: cell.column.getSize(), 
                         minWidth: cell.column.getSize(),
-                        padding: '0 16px', 
-                        fontSize: '13px', 
-                        color: '#cbd5e1', 
                         whiteSpace: 'nowrap', 
                         overflow: 'hidden', 
                         textOverflow: 'ellipsis', 
