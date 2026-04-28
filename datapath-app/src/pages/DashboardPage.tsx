@@ -4,14 +4,16 @@ import { useKimitEngine } from '../hooks/useKimitEngine';
 import { DataChart } from '../components/DataChart';
 import {
   Plus, Trash2, FileText, Loader2, Sparkles, Database,
-  ShieldCheck, Activity, AlertTriangle, TrendingUp, TrendingDown,
-  Minus, GitBranch,
+  Activity, AlertTriangle, TrendingUp, TrendingDown,
+  Minus, GitBranch, Wand2,
 } from 'lucide-react';
 import type { Lang, ChartInfo } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DataGrid } from '../components/Analysis/DataGrid';
 import { TransformationTimeline } from '../components/Analysis/TransformationTimeline';
 import { CorrelationHeatmap } from '../components/Analysis/CorrelationHeatmap';
+import { InsightSummary } from '../components/Analysis/InsightSummary';
+import { PowerBIPanel } from '../components/Analysis/PowerBIPanel';
 import { CreatorFooter } from '../components/CreatorFooter';
 import { exportBrandedPDF, exportToExcel } from '../lib/exportUtils';
 import { generateAInarrative } from '../lib/narrativeEngine';
@@ -75,6 +77,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
   } = useKimitEngine();
 
   const [exporting, setExporting] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
   const [customCharts, setCustomCharts] = useState<ChartInfo[]>([]);
   const [builder, setBuilder] = useState<{ x: string; y: string; type: ChartInfo['type'] }>({ x: '', y: '', type: 'bar' });
   const [activeChartFilter, setActiveChartFilter] = useState('');
@@ -84,6 +87,15 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
   const health = getHealthStats();
   const t = T[lang];
   const insights = info ? generateAInarrative(info) : [];
+
+  // Magic Clean: remove duplicates + fill nulls in one click
+  const handleMagicClean = async () => {
+    setCleaning(true);
+    await new Promise(r => setTimeout(r, 300)); // brief animation delay
+    removeDuplicates();
+    fillMissingValues();
+    setCleaning(false);
+  };
 
   if (!info) return <div className="p-20 text-center">No Data found. Please upload a file.</div>;
 
@@ -123,6 +135,17 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
           <p className="page-sub">{info.filename} • {info.rows.toLocaleString()} {t.records}</p>
         </div>
         <div className="actions-group" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {/* ✨ Magic Clean */}
+          <motion.button
+            className="premium-button"
+            onClick={handleMagicClean}
+            disabled={cleaning}
+            whileTap={{ scale: 0.96 }}
+            style={{ background: 'linear-gradient(135deg, #d4af37, #a3820a)', color: '#000' }}
+          >
+            {cleaning ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
+            Magic Clean
+          </motion.button>
           <button className="premium-button secondary" onClick={() => exportToExcel(info.workData, `Kimit_Data_${info.filename}.xlsx`)}>
             <Database size={16} /> Excel
           </button>
@@ -260,8 +283,8 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
             <div className="charts-display-grid">
               {customCharts.map((ch, i) => (
                 <div key={i} style={{ position: 'relative' }}>
-                  <DataChart chart={ch} onFilterClick={(_, v) => setActiveChartFilter(v)} />
-                  <button onClick={() => setCustomCharts(customCharts.filter((_, idx) => idx !== i))}
+                  <DataChart chart={ch} onFilterClick={(_col: string, v: string) => setActiveChartFilter(v)} />
+                  <button onClick={() => setCustomCharts(customCharts.filter((_ch, idx) => idx !== i))}
                     style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(239,68,68,0.15)',
                       color: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 6px', cursor: 'pointer' }}>
                     <Trash2 size={12} />
@@ -269,7 +292,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
                 </div>
               ))}
               {info.charts.slice(0, 4).map((ch, i) => (
-                <DataChart key={i} chart={ch} onFilterClick={(_, v) => setActiveChartFilter(v)} />
+                <DataChart key={i} chart={ch} onFilterClick={(_col: string, v: string) => setActiveChartFilter(v)} />
               ))}
             </div>
           </div>
@@ -317,25 +340,11 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
             </div>
           )}
 
-          {/* AI Narrative */}
-          <div className="glass-panel p-6">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <ShieldCheck size={18} style={{ color: 'var(--primary)' }} />
-              <h4 style={{ margin: 0, fontSize: 14 }}>{t.insights}</h4>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {insights.map((ins, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  style={{ padding: 11, borderRadius: 8,
-                    background: ins.type === 'positive' ? 'rgba(16,185,129,0.05)' : ins.type === 'warning' ? 'rgba(239,68,68,0.05)' : 'rgba(56,189,248,0.05)',
-                    borderLeft: `3px solid ${ins.type === 'positive' ? '#10b981' : ins.type === 'warning' ? '#ef4444' : '#38bdf8'}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 3 }}>{ins.title}</div>
-                  <div style={{ fontSize: 11, opacity: 0.8, lineHeight: 1.4 }}>{ins.description}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          {/* AI Insight Summary */}
+          <InsightSummary insights={insights} />
+
+          {/* Power BI Bridge */}
+          <PowerBIPanel />
 
           {/* Smart Transformations */}
           <div className="glass-panel p-6">

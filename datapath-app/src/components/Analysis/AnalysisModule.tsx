@@ -170,7 +170,14 @@ export const AnalysisModule: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             <ErrorBoundary moduleName="AI Storyteller">
-              <InsightSummary insights={insights} isLoading={isGeneratingInsights} />
+              <InsightSummary
+                insights={(insights ?? []).map(ins => ({
+                  title: ins.title,
+                  description: ins.content,
+                  type: 'info' as const,
+                }))}
+                isLoading={isGeneratingInsights}
+              />
             </ErrorBoundary>
 
             <ErrorBoundary moduleName="Health Score">
