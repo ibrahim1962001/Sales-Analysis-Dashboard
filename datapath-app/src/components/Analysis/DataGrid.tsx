@@ -39,6 +39,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
   outlierMap,
   showOutliers = false,
 }) => {
+  'use no memo';
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [isMobile, setIsMobile] = useState(false);
@@ -175,7 +176,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {{ asc: ' 🔼', desc: ' 🔽' }[header.column.getIsSorted() as string] ?? null}
+                      {{ asc: ' 🔼', desc: ' 🔽' }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
                     </div>
                   </div>
                 ))}

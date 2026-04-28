@@ -8,6 +8,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { InsightSummary } from './InsightSummary';
 import { SmartFilter } from './SmartFilter';
 import { ExportActions } from './ExportActions';
+import { TextAnalytics } from './TextAnalytics';
 import { validateDataset, runSystemHealthCheck } from '../../lib/validation';
 import type { DataRow } from '../../types/index';
 
@@ -28,6 +29,8 @@ export const AnalysisModule: React.FC = () => {
   const { metadata, anomalies, healthScore } = useAnalytics(data, columns);
   const { isGeneratingInsights, insights, generateInsights, parseNlqQuery } = useKimitExtra(data, columns);
   const [nlqFilter, setNlqFilter] = useState<Array<{ id: string, value: { operator: string, value: string } }> | null>(null);
+
+  const textColumns = React.useMemo(() => metadata.filter(m => m.type === 'text').map(m => m.name), [metadata]);
 
   const filteredData = React.useMemo(() => {
     if (!nlqFilter || nlqFilter.length === 0) return data;
@@ -164,6 +167,9 @@ export const AnalysisModule: React.FC = () => {
                 />
               </ErrorBoundary>
             </div>
+
+            {/* Module E: Text Analytics */}
+            <TextAnalytics data={filteredData} textColumns={textColumns} />
           </div>
 
           {/* Sidebar / Insights */}

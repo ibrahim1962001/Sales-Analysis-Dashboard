@@ -72,7 +72,39 @@ export const useKimitEngine = () => {
     console.log(`Executing ${actionType} on ${target}`);
     if (actionType === 'remove_duplicates') removeDuplicates();
     else if (actionType === 'fill_nulls') fillMissingValues();
+    else if (actionType === 'magic_clean') magicClean();
   }, [info, removeDuplicates, fillMissingValues]);
+
+  // ── 5. Magic Clean (Dedup + Mean Fill in one pass) ───────
+  /**
+   * Atomic operation: removes duplicate rows, then fills null/empty
+   * numeric values with the column mean. Single dataset update = one re-render.
+   */
+  const magicClean = useCallback(() => {
+    if (!info) return;
+
+    // Step 1: Deduplication
+    const seen = new Set<string>();
+    const deduped = info.workData.filter(row => {
+      const hash = JSON.stringify(row);
+      return seen.has(hash) ? false : !!seen.add(hash);
+    });
+
+    // Step 2: Mean-fill nulls
+    const filled = deduped.map(row => {
+      const newRow = { ...row };
+      for (const col of info.columns) {
+        if (newRow[col.name] == null || newRow[col.name] === '') {
+          newRow[col.name] = col.type === 'numeric'
+            ? (col.mean !== undefined ? Number(col.mean.toFixed(2)) : 0)
+            : 'N/A';
+        }
+      }
+      return newRow;
+    });
+
+    setDataset({ ...info, workData: filled, duplicates: 0, totalNulls: 0 });
+  }, [info, setDataset]);
 
   // ── 5. IQR Outlier Detection (memoized) ─────────────────
   /**
@@ -120,6 +152,7 @@ export const useKimitEngine = () => {
     // Existing
     removeDuplicates,
     fillMissingValues,
+    magicClean,
     getHealthStats,
     executeDataCommand,
     // New engines
