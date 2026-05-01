@@ -56,4 +56,15 @@ export const datasetsApi = {
     const { data } = await apiClient.post<UploadResult>("/api/datasets/import-sheets", { url });
     return data;
   },
+  /** Download raw file from storage */
+  downloadRaw: async (datasetId: number, filename: string): Promise<void> => {
+    const { data } = await apiClient.get(`/api/datasets/${datasetId}/download`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
 };

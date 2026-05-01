@@ -655,6 +655,32 @@ async def export_data(request: dict):
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename={filename}_cleaned.csv"}
         )
+
+@app.get("/api/datasets/{dataset_id}/download")
+async def download_raw_file(dataset_id: int):
+    """Download the raw original file from MinIO."""
+    if dataset_id not in DATA_STORE:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    ds = DATA_STORE[dataset_id]
+    if "storage_path" not in ds:
+        raise HTTPException(status_code=400, detail="Persistent storage path not found for this dataset")
+    
+    try:
+        file_bytes = storage_manager.download_file(ds["storage_path"])
+        original_filename = ds["filename"]
+        
+        # Determine content type based on extension
+        ext = original_filename.split('.')[-1].lower()
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" if ext == "xlsx" else "text/csv"
+        
+        return StreamingResponse(
+            io.BytesIO(file_bytes),
+            media_type=media_type,
+            headers={"Content-Disposition": f"attachment; filename={original_filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Download from storage failed: {str(e)}")
     elif format_type == "json":
         json_data = df.to_json(orient='records', force_ascii=False, indent=2)
         return StreamingResponse(

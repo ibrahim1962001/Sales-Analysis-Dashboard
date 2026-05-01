@@ -272,6 +272,23 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
           >
             <Plug size={14} /> Sources
           </button>
+          {/* 📥 Download Original */}
+          <button
+            className="premium-button secondary"
+            onClick={async () => {
+              if (info?.datasetId) {
+                try {
+                  const { datasetsApi } = await import('../api/datasets.api');
+                  await datasetsApi.downloadRaw(info.datasetId, info.filename);
+                } catch (err) {
+                  alert("Download failed: " + err);
+                }
+              }
+            }}
+            style={{ fontSize: '12px' }}
+          >
+            <FileText size={14} /> Download Original
+          </button>
           {/* ✨ Magic Clean */}
           <motion.button
             className="premium-button"
