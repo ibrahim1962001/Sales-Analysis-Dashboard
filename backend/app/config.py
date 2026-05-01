@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     RATE_LIMIT_DEFAULT: str = "60/minute"
     RATE_LIMIT_AI: str = "10/minute"
 
+    # MinIO / S3
+    MINIO_ENDPOINT: str = "minio:9000"
+    MINIO_ACCESS_KEY: str = "kimit_admin"
+    MINIO_SECRET_KEY: str = "kimit_storage_secret"
+    MINIO_SECURE: bool = False
+    MINIO_BUCKET_NAME: str = "datasets"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

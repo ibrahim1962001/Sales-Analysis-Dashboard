@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from groq import Groq
 import pandas as pd
 import numpy as np
+from app.utils.storage import storage_manager
 
 load_dotenv()
 
@@ -348,12 +349,18 @@ async def upload_file(file: UploadFile = File(...)):
         df = df.replace([np.inf, -np.inf], np.nan)
         
         dataset_id = len(DATA_STORE) + 1
+        
+        # Save to MinIO for persistence
+        file_path = f"user_uploads/{dataset_id}_{file.filename}"
+        storage_manager.upload_file(contents, file_path)
+        
         preview = df.head(10).to_dict(orient='records')
         duplicates = int(df.duplicated().sum())
         
         DATA_STORE[dataset_id] = {
             "df": df,
             "filename": file.filename,
+            "storage_path": file_path,
             "columns": df.columns.tolist(),
             "dtypes": df.dtypes.astype(str).to_dict(),
             "shape": list(df.shape),
@@ -413,12 +420,19 @@ async def import_sheets(request: dict):
     df = df.replace([np.inf, -np.inf], np.nan)
     
     dataset_id = len(DATA_STORE) + 1
+    
+    # Save to MinIO for persistence
+    csv_bytes = df.to_csv(index=False).encode('utf-8')
+    sheet_path = f"google_sheets/{dataset_id}_import.csv"
+    storage_manager.upload_file(csv_bytes, sheet_path, content_type="text/csv")
+    
     preview = df.head(10).to_dict(orient='records')
     duplicates = int(df.duplicated().sum())
     
     DATA_STORE[dataset_id] = {
         "df": df,
         "filename": "Google Sheet Import",
+        "storage_path": sheet_path,
         "columns": df.columns.tolist(),
         "dtypes": df.dtypes.astype(str).to_dict(),
         "shape": list(df.shape),
