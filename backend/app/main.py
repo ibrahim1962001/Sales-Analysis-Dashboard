@@ -655,6 +655,16 @@ async def export_data(request: dict):
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename={filename}_cleaned.csv"}
         )
+    elif format_type == "json":
+        json_data = df.to_json(orient='records', force_ascii=False, indent=2)
+        return StreamingResponse(
+            io.StringIO(json_data),
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename={filename}_cleaned.json"}
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported format. Use 'csv' or 'json'.")
+
 
 @app.get("/api/datasets/{dataset_id}/download")
 async def download_raw_file(dataset_id: int):
@@ -681,15 +691,6 @@ async def download_raw_file(dataset_id: int):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Download from storage failed: {str(e)}")
-    elif format_type == "json":
-        json_data = df.to_json(orient='records', force_ascii=False, indent=2)
-        return StreamingResponse(
-            io.StringIO(json_data),
-            media_type="application/json",
-            headers={"Content-Disposition": f"attachment; filename={filename}_cleaned.json"}
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported format. Use 'csv' or 'json'.")
 
 
 if __name__ == "__main__":
