@@ -14,8 +14,10 @@ from groq import Groq
 import pandas as pd
 import numpy as np
 from app.utils.storage import storage_manager
+import logging
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 def detect_anomalies(df: pd.DataFrame) -> List[Dict]:
     """Detect anomalies (outliers) in numeric columns using Z-score."""
@@ -352,6 +354,7 @@ async def upload_file(file: UploadFile = File(...)):
         
         # Save to MinIO for persistence
         file_path = f"user_uploads/{dataset_id}_{file.filename}"
+        logger.info(f"Starting MinIO upload for {file_path}")
         storage_manager.upload_file(contents, file_path)
         
         preview = df.head(10).to_dict(orient='records')
