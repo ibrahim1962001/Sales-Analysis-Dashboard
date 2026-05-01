@@ -17,7 +17,7 @@ from app.utils.storage import storage_manager
 import logging
 
 load_dotenv()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 def detect_anomalies(df: pd.DataFrame) -> List[Dict]:
     """Detect anomalies (outliers) in numeric columns using Z-score."""
@@ -330,9 +330,18 @@ async def upload_file(file: UploadFile = File(...)):
     """Upload and process CSV or Excel file."""
     try:
         contents = await file.read()
-        
         if not contents:
             raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+
+        # PERSISTENT STORAGE FIRST (Save raw file even if processing fails)
+        dataset_id = len(DATA_STORE) + 1
+        file_path = f"user_uploads/{dataset_id}_{file.filename}"
+        try:
+            logger.info(f"Uploading raw file {file.filename} ({len(contents)} bytes) to MinIO path: {file_path}")
+            storage_manager.upload_file(contents, file_path)
+        except Exception as e:
+            logger.error(f"MinIO Backup Failed: {str(e)}")
+            # Continue anyway, but log the error
         
         try:
             df = robust_read_file(contents, file.filename)
@@ -349,13 +358,6 @@ async def upload_file(file: UploadFile = File(...)):
         
         df.columns = df.columns.str.strip()
         df = df.replace([np.inf, -np.inf], np.nan)
-        
-        dataset_id = len(DATA_STORE) + 1
-        
-        # Save to MinIO for persistence
-        file_path = f"user_uploads/{dataset_id}_{file.filename}"
-        logger.info(f"Starting MinIO upload for {file_path}")
-        storage_manager.upload_file(contents, file_path)
         
         preview = df.head(10).to_dict(orient='records')
         duplicates = int(df.duplicated().sum())
@@ -419,15 +421,15 @@ async def import_sheets(request: dict):
     if df.empty:
         raise HTTPException(status_code=400, detail="The Google Sheet is empty.")
         
-    df.columns = df.columns.str.strip()
-    df = df.replace([np.inf, -np.inf], np.nan)
-    
+    # PERSISTENT STORAGE FIRST
     dataset_id = len(DATA_STORE) + 1
-    
-    # Save to MinIO for persistence
-    csv_bytes = df.to_csv(index=False).encode('utf-8')
     sheet_path = f"google_sheets/{dataset_id}_import.csv"
-    storage_manager.upload_file(csv_bytes, sheet_path, content_type="text/csv")
+    try:
+        csv_bytes = df.to_csv(index=False).encode('utf-8')
+        logger.info(f"Saving Google Sheet import to MinIO: {sheet_path}")
+        storage_manager.upload_file(csv_bytes, sheet_path, content_type="text/csv")
+    except Exception as e:
+        logger.error(f"MinIO Backup Failed for sheet: {str(e)}")
     
     preview = df.head(10).to_dict(orient='records')
     duplicates = int(df.duplicated().sum())

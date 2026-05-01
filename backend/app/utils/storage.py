@@ -5,7 +5,7 @@ from app.config import settings
 from typing import BinaryIO
 import io
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 class StorageManager:
     def __init__(self):
