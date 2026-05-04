@@ -109,6 +109,50 @@ function donutOpt(items: { l: string; v: number }[], colors: string[]) {
     series: [{ type: 'pie', radius: ['45%', '72%'], center: ['38%', '50%'], data: items.map((it, i) => ({ name: it.l, value: it.v, itemStyle: { color: colors[i % colors.length] } })), label: { show: false }, emphasis: { scale: true, scaleSize: 6 } }],
   };
 }
+function histOpt(vals: number[], label: string, color: string) {
+  if (vals.length === 0) return null;
+  const min = Math.min(...vals); const max = Math.max(...vals);
+  const bins = Math.min(20, Math.ceil(Math.sqrt(vals.length)));
+  const binSize = (max - min) / bins || 1;
+  const counts = Array(bins).fill(0);
+  vals.forEach(v => { const i = Math.min(Math.floor((v - min) / binSize), bins - 1); counts[i]++; });
+  const labels = counts.map((_, i) => fmt(min + i * binSize));
+  return {
+    backgroundColor: 'transparent', animation: true,
+    tooltip: { trigger: 'axis', backgroundColor: '#0f172a', textStyle: { color: '#f8fafc', fontSize: 12 }, formatter: (p: {name: string; value: number}[]) => `${label}: ${p[0].name}<br/>Count: <b>${p[0].value}</b>` },
+    grid: { left: 40, right: 10, top: 10, bottom: 38 },
+    xAxis: { type: 'category', data: labels, axisLabel: { color: '#64748b', fontSize: 9, rotate: 30, interval: Math.floor(bins / 6) }, axisLine: { lineStyle: { color: '#1e293b' } }, axisTick: { show: false } },
+    yAxis: { type: 'value', axisLabel: { color: '#64748b', fontSize: 10 }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLine: { show: false } },
+    series: [{ type: 'bar', data: counts, barCategoryGap: '8%', itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color }, { offset: 1, color: color + '44' }] }, borderRadius: [4, 4, 0, 0] } }],
+  };
+}
+function multiBarOpt(labels: string[], series: { name: string; data: number[]; color: string }[]) {
+  return {
+    backgroundColor: 'transparent', animation: true,
+    tooltip: { trigger: 'axis', backgroundColor: '#0f172a', textStyle: { color: '#f8fafc', fontSize: 11 } },
+    legend: { top: 4, right: 8, textStyle: { color: '#94a3b8', fontSize: 10 }, itemWidth: 12, itemHeight: 8 },
+    grid: { left: 45, right: 16, top: 36, bottom: 40 },
+    xAxis: { type: 'category', data: labels, axisLabel: { color: '#94a3b8', fontSize: 10, rotate: labels.some(l => l.length > 6) ? 30 : 0 }, axisLine: { lineStyle: { color: '#1e293b' } }, axisTick: { show: false } },
+    yAxis: { type: 'value', axisLabel: { color: '#64748b', fontSize: 10, formatter: (v: number) => fmt(v) }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLine: { show: false } },
+    series: series.map(s => ({ type: 'bar', name: s.name, data: s.data, barMaxWidth: 22, itemStyle: { color: s.color, borderRadius: [4, 4, 0, 0] } })),
+  };
+}
+function radarOpt(indicators: { name: string; max: number }[], series: { name: string; value: number[] }[], palette: string[]) {
+  return {
+    backgroundColor: 'transparent', animation: true,
+    tooltip: { backgroundColor: '#0f172a', textStyle: { color: '#f8fafc', fontSize: 11 } },
+    legend: { bottom: 0, textStyle: { color: '#94a3b8', fontSize: 10 }, itemWidth: 10, itemHeight: 10 },
+    radar: {
+      indicator: indicators,
+      splitArea: { areaStyle: { color: ['rgba(255,255,255,0.01)', 'transparent', 'rgba(255,255,255,0.01)', 'transparent', 'rgba(255,255,255,0.01)'] } },
+      splitLine: { lineStyle: { color: '#1e293b' } },
+      axisName: { color: '#94a3b8', fontSize: 10 },
+      axisLine: { lineStyle: { color: '#1e293b' } },
+    },
+    series: [{ type: 'radar', data: series.map((s, i) => ({ name: s.name, value: s.value, lineStyle: { color: palette[i % palette.length], width: 2 }, itemStyle: { color: palette[i % palette.length] }, areaStyle: { color: palette[i % palette.length] + '22' } })) }],
+  };
+}
+
 
 // ── KPI Card ─────────────────────────────────────────────────────
 const KpiCard: React.FC<{ title: string; value: string; sub: string; color: string; sparkVals: number[]; icon: string }> = ({ title, value, sub, color, sparkVals, icon }) => (
@@ -239,6 +283,50 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
     })).filter(c => c.pct > 0).sort((a, b) => b.pct - a.pct).slice(0, 8),
   [data, info]);
 
+  // Histogram of first numeric column
+  const histChart = useMemo(() => {
+    if (!numCols[0]) return null;
+    const vals = data.map(r => Number(r[numCols[0]])).filter(v => !isNaN(v));
+    return histOpt(vals, numCols[0], meta.s);
+  }, [data, numCols, meta]);
+
+  // Multi-metric grouped bar (avg per category)
+  const multiBarChart = useMemo(() => {
+    if (numCols.length < 2 || !catCols[0]) return null;
+    const topCats = groupByCount(data, catCols[0], 7).map(g => g.l);
+    if (topCats.length < 2) return null;
+    const colors = [meta.p, meta.s, '#f59e0b', '#8b5cf6'];
+    const series = numCols.slice(0, 3).map((col, i) => ({
+      name: col.length > 14 ? col.slice(0, 13) + '…' : col,
+      color: colors[i % colors.length],
+      data: topCats.map(cat => {
+        const rows = data.filter(r => String(r[catCols[0]]) === cat);
+        return Math.round(rows.reduce((s, r) => s + (Number(r[col]) || 0), 0) / (rows.length || 1));
+      }),
+    }));
+    return multiBarOpt(topCats.map(l => l.length > 10 ? l.slice(0, 9) + '…' : l), series);
+  }, [data, numCols, catCols, meta]);
+
+  // Radar chart — top 5 categories across all numeric cols
+  const radarChart = useMemo(() => {
+    if (numCols.length < 2 || !catCols[0]) return null;
+    const topCats = groupByCount(data, catCols[0], 5).map(g => g.l);
+    if (topCats.length < 3) return null;
+    const numSlice = numCols.slice(0, 5);
+    const indicators = numSlice.map(col => {
+      const max = Math.max(...data.map(r => Number(r[col]) || 0));
+      return { name: col.length > 10 ? col.slice(0, 9) + '…' : col, max: max || 1 };
+    });
+    const series = topCats.slice(0, 4).map(cat => {
+      const rows = data.filter(r => String(r[catCols[0]]) === cat);
+      const value = numSlice.map(col => Math.round(rows.reduce((s, r) => s + (Number(r[col]) || 0), 0) / (rows.length || 1)));
+      return { name: cat.length > 12 ? cat.slice(0, 11) + '…' : cat, value };
+    });
+    return radarOpt(indicators, series, palette);
+  }, [data, numCols, catCols, palette]);
+
+
+
   if (!info || data.length === 0) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -347,7 +435,37 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
           )}
         </div>
 
+        {/* ── Histogram + Multi-Metric Bar ── */}
+        {(histChart || multiBarChart) && (
+          <div style={{ display: 'grid', gridTemplateColumns: histChart && multiBarChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+            {histChart && numCols[0] && (
+              <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>📊 Distribution — {numCols[0]}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 12 }}>Frequency of values across all records</div>
+                <ReactECharts key={refreshKey} option={histChart} style={{ height: 220 }} theme="dark" />
+              </div>
+            )}
+            {multiBarChart && catCols[0] && (
+              <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>📈 Multi-Metric Comparison — by {catCols[0]}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Average value per category across metrics</div>
+                <ReactECharts key={refreshKey} option={multiBarChart} style={{ height: 220 }} theme="dark" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Radar Chart (Multi-Dimensional Performance) ── */}
+        {radarChart && (
+          <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px', marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>🕸️ Multi-Dimensional Comparison — Top Performers</div>
+            <div style={{ fontSize: 11, color: '#64748b', marginBottom: 8 }}>Compare top {catCols[0]} across all numeric metrics simultaneously</div>
+            <ReactECharts key={refreshKey} option={radarChart} style={{ height: 320 }} theme="dark" />
+          </div>
+        )}
+
         {/* ── Descriptive Statistics Table ── */}
+
         {statsData.length > 0 && (
           <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
