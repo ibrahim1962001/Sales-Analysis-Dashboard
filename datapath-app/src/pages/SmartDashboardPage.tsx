@@ -149,21 +149,21 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
     const labels = sliced.map((_, i) => String(i + 1));
     const values = sliced.map(r => Number(r[col]) || 0);
     return lineOpt(labels, values, meta.p);
-  }, [data, numCols, meta, refreshKey]);
+  }, [data, numCols, meta]);
 
   // Bar chart — top categories by first numeric
   const barOpts = useMemo(() => {
     if (!catCols[0] || !numCols[0]) return null;
     const rows = groupBySum(data, catCols[0], numCols[0], 10).reverse();
     return barOpt(rows.map(r => r.l.length > 16 ? r.l.slice(0, 14) + '…' : r.l), rows.map(r => r.v), meta.s);
-  }, [data, catCols, numCols, meta, refreshKey]);
+  }, [data, catCols, numCols, meta]);
 
   // Donut chart — category distribution
   const donutOpts = useMemo(() => {
     if (!catCols[0]) return null;
     const rows = groupByCount(data, catCols[0], 7);
     return donutOpt(rows, palette);
-  }, [data, catCols, palette, refreshKey]);
+  }, [data, catCols, palette]);
 
   if (!info || data.length === 0) {
     return (
@@ -224,7 +224,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 16 }}>
                   📈 {numCols[0]} — Trend Overview
                 </div>
-                <ReactECharts option={trendOpts} style={{ height: 260 }} theme="dark" />
+                <ReactECharts key={refreshKey} option={trendOpts} style={{ height: 260 }} theme="dark" />
               </div>
             )}
 
@@ -234,7 +234,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 16 }}>
                   🏅 Top {catCols[0]} by {numCols[0] ?? 'Count'}
                 </div>
-                <ReactECharts option={barOpts} style={{ height: 280 }} theme="dark" />
+                <ReactECharts key={refreshKey} option={barOpts} style={{ height: 280 }} theme="dark" />
               </div>
             )}
           </div>
@@ -245,7 +245,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
               <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>
                 🍩 {catCols[0]} — Distribution
               </div>
-              <ReactECharts option={donutOpts} style={{ flex: 1, minHeight: 320 }} theme="dark" />
+              <ReactECharts key={refreshKey} option={donutOpts} style={{ flex: 1, minHeight: 320 }} theme="dark" />
               {/* Category count badges */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                 {groupByCount(data, catCols[0], 5).map((it, i) => (
