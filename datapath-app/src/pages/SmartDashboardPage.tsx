@@ -46,6 +46,26 @@ function fmt(n: number): string {
   if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
   return n.toLocaleString();
 }
+function calcStats(vals: number[]) {
+  const s = vals.filter(v => !isNaN(v) && v !== null).sort((a, b) => a - b);
+  const n = s.length; if (n === 0) return null;
+  const mean = s.reduce((a, b) => a + b, 0) / n;
+  const median = n % 2 === 0 ? (s[n/2-1] + s[n/2]) / 2 : s[Math.floor(n/2)];
+  const std = Math.sqrt(s.reduce((a, v) => a + (v - mean) ** 2, 0) / n);
+  const q1 = s[Math.floor(n * 0.25)]; const q3 = s[Math.floor(n * 0.75)]; const iqr = q3 - q1;
+  const outliers = s.filter(v => v < q1 - 1.5 * iqr || v > q3 + 1.5 * iqr).length;
+  return { mean, median, std, min: s[0], max: s[n-1], q1, q3, outliers, n };
+}
+function scatterOpt(pts: [number,number][], xL: string, yL: string, color: string) {
+  return {
+    backgroundColor: 'transparent', animation: true,
+    tooltip: { trigger: 'item', backgroundColor: '#0f172a', textStyle: { color: '#f8fafc', fontSize: 11 }, formatter: (p: { data: number[] }) => `${xL}: ${fmt(p.data[0])}<br/>${yL}: ${fmt(p.data[1])}` },
+    grid: { left: 55, right: 16, top: 16, bottom: 36 },
+    xAxis: { type: 'value', name: xL, nameTextStyle: { color: '#64748b', fontSize: 10 }, nameLocation: 'end', axisLabel: { color: '#64748b', fontSize: 10, formatter: (v: number) => fmt(v) }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLine: { show: false } },
+    yAxis: { type: 'value', name: yL, nameTextStyle: { color: '#64748b', fontSize: 10 }, nameLocation: 'end', axisLabel: { color: '#64748b', fontSize: 10, formatter: (v: number) => fmt(v) }, splitLine: { lineStyle: { color: '#1e293b' } }, axisLine: { show: false } },
+    series: [{ type: 'scatter', data: pts, symbolSize: 7, itemStyle: { color, opacity: 0.65, borderColor: color + '99', borderWidth: 1 } }],
+  };
+}
 
 // ── Sparkline SVG ───────────────────────────────────────────────
 const Sparkline: React.FC<{ vals: number[]; color: string }> = ({ vals, color }) => {
@@ -165,6 +185,60 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
     return donutOpt(rows, palette);
   }, [data, catCols, palette]);
 
+  // Descriptive statistics per numeric column
+  const statsData = useMemo(() =>
+    numCols.slice(0, 6).map(col => {
+      const vals = data.map(r => Number(r[col]));
+      const st = calcStats(vals);
+      return st ? { col, ...st } : null;
+    }).filter(Boolean) as ({ col: string; mean: number; median: number; std: number; min: number; max: number; q1: number; q3: number; outliers: number; n: number })[],
+  [data, numCols]);
+
+  // Auto-generated decision insights
+  const insights = useMemo(() => {
+    const result: { icon: string; title: string; desc: string; color: string }[] = [];
+    if (catCols[0] && numCols[0]) {
+      const top = groupBySum(data, catCols[0], numCols[0], 1)[0];
+      if (top) result.push({ icon: '🏆', title: 'Top Performer', desc: `"${top.l.slice(0,20)}" leads with ${fmt(top.v)} in ${numCols[0]}`, color: '#10b981' });
+    }
+    const s0 = statsData[0];
+    if (s0 && s0.outliers > 0) {
+      const pct = Math.round((s0.outliers / s0.n) * 100);
+      result.push({ icon: '⚠️', title: 'Outliers Detected', desc: `${s0.outliers} values (${pct}%) are outliers in "${s0.col}"`, color: '#f59e0b' });
+    }
+    const missing = data.reduce((a, r) => a + Object.values(r).filter(v => v === null || v === undefined || v === '').length, 0);
+    if (missing > 0) result.push({ icon: '🔍', title: 'Missing Data Alert', desc: `${missing.toLocaleString()} empty cells — run Cleaning to fix`, color: '#ef4444' });
+    else result.push({ icon: '✅', title: 'Clean Dataset', desc: 'No missing values detected across all columns', color: '#10b981' });
+    if (s0) result.push({ icon: '📊', title: 'Value Range', desc: `"${s0.col}" spans ${fmt(s0.min)} → ${fmt(s0.max)}, avg ${fmt(Math.round(s0.mean))}`, color: '#6366f1' });
+    if (catCols[0]) {
+      const unique = new Set(data.map(r => String(r[catCols[0]]))).size;
+      result.push({ icon: '🎯', title: 'Category Diversity', desc: `"${catCols[0]}" contains ${unique} unique values`, color: '#3b82f6' });
+    }
+    return result.slice(0, 4);
+  }, [data, numCols, catCols, statsData]);
+
+  // Top 5 & Bottom 5 by primary metric
+  const topBottom = useMemo(() => {
+    if (!numCols[0]) return { top: [], bottom: [] };
+    const sorted = [...data].sort((a, b) => (Number(b[numCols[0]]) || 0) - (Number(a[numCols[0]]) || 0));
+    return { top: sorted.slice(0, 5), bottom: [...sorted.slice(-5)].reverse() };
+  }, [data, numCols]);
+
+  // Scatter plot (if 2+ numeric columns exist)
+  const scatterChart = useMemo(() => {
+    if (numCols.length < 2) return null;
+    const pts: [number, number][] = data.slice(0, 300).map(r => [Number(r[numCols[0]]) || 0, Number(r[numCols[1]]) || 0]);
+    return scatterOpt(pts, numCols[0], numCols[1], meta.p);
+  }, [data, numCols, meta]);
+
+  // Missing data per column
+  const missingCols = useMemo(() =>
+    (info?.columns ?? []).map(c => ({
+      col: c.name,
+      pct: Math.round((data.filter(r => r[c.name] === null || r[c.name] === undefined || r[c.name] === '').length / (data.length || 1)) * 100),
+    })).filter(c => c.pct > 0).sort((a, b) => b.pct - a.pct).slice(0, 8),
+  [data, info]);
+
   if (!info || data.length === 0) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>
@@ -212,6 +286,21 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
           {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
         </div>
 
+        {/* ── Auto Insights Row ── */}
+        {insights.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {insights.map((ins, i) => (
+              <div key={i} style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${ins.color}22`, borderLeft: `4px solid ${ins.color}`, borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{ins.icon}</span>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: ins.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{ins.title}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{ins.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── Charts Grid ── */}
         <div style={{ display: 'grid', gridTemplateColumns: trendOpts ? '1fr 420px' : '1fr', gap: 20, marginBottom: 20 }}>
 
@@ -257,6 +346,98 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
             </div>
           )}
         </div>
+
+        {/* ── Descriptive Statistics Table ── */}
+        {statsData.length > 0 && (
+          <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>📐 Descriptive Statistics</span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    {['Column','Min','Max','Mean','Median','Std Dev','Outliers'].map(h => (
+                      <th key={h} style={{ padding: '9px 14px', textAlign: 'left', color: '#64748b', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', borderBottom: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {statsData.map((s, i) => (
+                    <tr key={s.col} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
+                      <td style={{ padding: '9px 14px', color: meta.p, fontWeight: 700, whiteSpace: 'nowrap' }}>{s.col}</td>
+                      <td style={{ padding: '9px 14px', color: '#e2e8f0', fontVariantNumeric: 'tabular-nums' }}>{fmt(s.min)}</td>
+                      <td style={{ padding: '9px 14px', color: '#e2e8f0', fontVariantNumeric: 'tabular-nums' }}>{fmt(s.max)}</td>
+                      <td style={{ padding: '9px 14px', color: '#e2e8f0', fontVariantNumeric: 'tabular-nums' }}>{fmt(Math.round(s.mean))}</td>
+                      <td style={{ padding: '9px 14px', color: '#e2e8f0', fontVariantNumeric: 'tabular-nums' }}>{fmt(Math.round(s.median))}</td>
+                      <td style={{ padding: '9px 14px', color: '#e2e8f0', fontVariantNumeric: 'tabular-nums' }}>{fmt(Math.round(s.std))}</td>
+                      <td style={{ padding: '9px 14px' }}>
+                        <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: s.outliers > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.12)', color: s.outliers > 0 ? '#f59e0b' : '#10b981' }}>
+                          {s.outliers > 0 ? `⚠️ ${s.outliers}` : '✅ 0'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Top & Bottom 5 + Scatter ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: scatterChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+          {numCols[0] && (
+            <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#10b981' }}>🏆 Top 5</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444' }}>📉 Bottom 5</span>
+                <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>by {numCols[0]}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                {(['top', 'bottom'] as const).map(side => (
+                  <div key={side} style={{ borderRight: side === 'top' ? '1px solid rgba(255,255,255,0.05)' : undefined }}>
+                    {topBottom[side].map((row, i) => (
+                      <div key={i} style={{ padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                          {catCols[0] ? String(row[catCols[0]] ?? '—').slice(0, 18) : `Row ${i + 1}`}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: side === 'top' ? '#10b981' : '#ef4444', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                          {fmt(Number(row[numCols[0]]) || 0)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {scatterChart && (
+            <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 12 }}>🔗 Correlation — {numCols[0]} vs {numCols[1]}</div>
+              <ReactECharts key={refreshKey} option={scatterChart} style={{ height: 220 }} theme="dark" />
+            </div>
+          )}
+        </div>
+
+        {/* ── Missing Data Alert ── */}
+        {missingCols.length > 0 && (
+          <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, padding: '16px 20px', marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 12 }}>🔍 Missing Data by Column</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {missingCols.map(mc => (
+                <div key={mc.col} style={{ flex: '1 1 180px', minWidth: 160 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{mc.col}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: mc.pct > 30 ? '#ef4444' : '#f59e0b' }}>{mc.pct}%</span>
+                  </div>
+                  <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)' }}>
+                    <div style={{ height: '100%', borderRadius: 2, width: `${mc.pct}%`, background: mc.pct > 30 ? '#ef4444' : '#f59e0b', transition: 'width 0.6s ease' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Data Preview Table ── */}
         <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, overflow: 'hidden' }}>
