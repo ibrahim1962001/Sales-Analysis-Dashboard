@@ -90,6 +90,7 @@ function App() {
 
   const handleFile = useCallback(async (file: File) => {
     setLoading(true);
+    setProgress(0);
     setLoadMsg(lang === 'ar' ? 'جاري التحليل... انتظر قليلاً' : 'Analyzing... please wait');
     try {
       if (file.size > 50 * 1024 * 1024) {
@@ -97,45 +98,55 @@ function App() {
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        // Large file (> 10MB) -> Send to backend Celery worker
+        // Large file (> 10MB) -> Try backend first, fallback to browser if backend unavailable
         setLoadMsg(lang === 'ar' ? 'جاري التحميل والمعالجة في السيرفر...' : 'Uploading and processing on server...');
-        const res = await datasetsApi.uploadLarge(file);
-        
-        const jobId = res.job_id;
-        let statusRes;
-        
-        while (true) {
-          await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
-          statusRes = await datasetsApi.getUploadStatus(jobId);
+        try {
+          const res = await datasetsApi.uploadLarge(file);
+          const jobId = res.job_id;
+          let statusRes;
           
-          if (statusRes.status === 'processing') {
-            setProgress(statusRes.progress || 10);
-            setLoadMsg(statusRes.message || (lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'));
-          } else if (statusRes.status === 'done' || statusRes.status === 'success') {
-            break;
-          } else if (statusRes.status === 'error' || statusRes.status === 'failure') {
-            throw new Error(statusRes.message || 'Error processing file');
+          while (true) {
+            await new Promise(r => setTimeout(r, 2000));
+            statusRes = await datasetsApi.getUploadStatus(jobId);
+            
+            if (statusRes.status === 'processing') {
+              setProgress(statusRes.progress || 10);
+              setLoadMsg(statusRes.message || (lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'));
+            } else if (statusRes.status === 'done' || statusRes.status === 'success') {
+              break;
+            } else if (statusRes.status === 'error' || statusRes.status === 'failure') {
+              throw new Error(statusRes.message || 'Backend error');
+            }
           }
+          
+          const { convertBackendResultToDatasetInfo } = await import('./lib/dataUtils');
+          const info = convertBackendResultToDatasetInfo(statusRes as any);
+          setDataset(info);
+          setProgress(100);
+          showToast(lang === 'ar' ? `✅ تمت معالجة ${info.rows.toLocaleString()} سجل` : `✅ Processed ${info.rows.toLocaleString()} records`);
+        } catch (_backendErr) {
+          // Backend unavailable → fallback to browser parsing
+          console.warn('Backend unavailable, falling back to browser parsing:', _backendErr);
+          setLoadMsg(lang === 'ar' ? 'جاري التحليل في المتصفح (وضع عدم الاتصال)...' : 'Analyzing in browser (offline mode)...');
+          const rows = await parseFile(file, setProgress);
+          setProgress(90);
+          if (!rows.length) throw new Error('Empty file');
+          const info = analyzeDataset(file, rows);
+          setDataset(info);
+          setProgress(100);
+          showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
         }
-        
-        const { convertBackendResultToDatasetInfo } = await import('./lib/dataUtils');
-        const info = convertBackendResultToDatasetInfo(statusRes as any);
-        setDataset(info);
-        setProgress(100);
-        showToast(lang === 'ar' ? `✅ تمت معالجة ${info.rows.toLocaleString()} سجل بسرعة فائقة` : `✅ Processed ${info.rows.toLocaleString()} records ultra-fast`);
-        
       } else {
         // Small file -> Parse in browser
         const rows = await parseFile(file, setProgress);
         setProgress(90);
-        
         if (!rows.length) throw new Error('Empty file');
         const info = analyzeDataset(file, rows);
         setDataset(info);
         setProgress(100);
         showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
-        
-        // Send file to backend for MinIO persistence ONLY
+
+        // Send file to backend for MinIO persistence ONLY (non-blocking)
         datasetsApi.storeFileOnly(file)
           .then(res => {
             if (res.saved_to_storage) {
@@ -148,15 +159,16 @@ function App() {
       setTimeout(() => setTab('dashboard'), 500);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
-      const msg = errorMessage === 'exceeds 50MB' 
+      const msg = errorMessage === 'exceeds 50MB'
         ? (lang === 'ar' ? '❌ الملف كبير جداً (أقصى حد 50 ميجابايت)' : '❌ File too large (Max 50MB)')
         : (lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file');
       showToast(msg, 'err');
-    } finally { 
-      setLoading(false); 
+    } finally {
+      setLoading(false);
       setProgress(0);
     }
   }, [lang, setDataset]);
+
 
   const handleChatFile = useCallback(async (file: File) => {
     setLoading(true);
