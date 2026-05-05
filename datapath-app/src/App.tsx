@@ -91,29 +91,59 @@ function App() {
   const handleFile = useCallback(async (file: File) => {
     setLoading(true);
     setLoadMsg(lang === 'ar' ? 'جاري التحليل... انتظر قليلاً' : 'Analyzing... please wait');
-    setProgress(0);
     try {
       if (file.size > 50 * 1024 * 1024) {
         throw new Error('exceeds 50MB');
       }
-      
-      const rows = await parseFile(file, setProgress);
-      setProgress(90);
-      
-      if (!rows.length) throw new Error('Empty file');
-      const info = analyzeDataset(file, rows);
-      setDataset(info);
-      setProgress(100);
-      showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
-      
-      // Send file to backend for MinIO persistence ONLY (bypass pandas)
-      datasetsApi.storeFileOnly(file)
-        .then(res => {
-          if (res.saved_to_storage) {
-            showToast(lang === 'ar' ? '☁️ تم حفظ الملف في التخزين السحابي' : '☁️ File saved to cloud storage');
+
+      if (file.size > 10 * 1024 * 1024) {
+        // Large file (> 10MB) -> Send to backend Celery worker
+        setLoadMsg(lang === 'ar' ? 'جاري التحميل والمعالجة في السيرفر...' : 'Uploading and processing on server...');
+        const res = await datasetsApi.uploadLarge(file);
+        
+        const jobId = res.job_id;
+        let statusRes;
+        
+        while (true) {
+          await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
+          statusRes = await datasetsApi.getUploadStatus(jobId);
+          
+          if (statusRes.status === 'processing') {
+            setProgress(statusRes.progress || 10);
+            setLoadMsg(statusRes.message || (lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'));
+          } else if (statusRes.status === 'done' || statusRes.status === 'success') {
+            break;
+          } else if (statusRes.status === 'error' || statusRes.status === 'failure') {
+            throw new Error(statusRes.message || 'Error processing file');
           }
-        })
-        .catch(err => console.error("Cloud save failed:", err));
+        }
+        
+        const { convertBackendResultToDatasetInfo } = await import('./lib/dataUtils');
+        const info = convertBackendResultToDatasetInfo(statusRes as any);
+        setDataset(info);
+        setProgress(100);
+        showToast(lang === 'ar' ? `✅ تمت معالجة ${info.rows.toLocaleString()} سجل بسرعة فائقة` : `✅ Processed ${info.rows.toLocaleString()} records ultra-fast`);
+        
+      } else {
+        // Small file -> Parse in browser
+        const rows = await parseFile(file, setProgress);
+        setProgress(90);
+        
+        if (!rows.length) throw new Error('Empty file');
+        const info = analyzeDataset(file, rows);
+        setDataset(info);
+        setProgress(100);
+        showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
+        
+        // Send file to backend for MinIO persistence ONLY
+        datasetsApi.storeFileOnly(file)
+          .then(res => {
+            if (res.saved_to_storage) {
+              showToast(lang === 'ar' ? '☁️ تم حفظ الملف في التخزين السحابي' : '☁️ File saved to cloud storage');
+            }
+          })
+          .catch(err => console.error("Cloud save failed:", err));
+      }
 
       setTimeout(() => setTab('dashboard'), 500);
     } catch (e: unknown) {
@@ -136,13 +166,47 @@ function App() {
       if (file.size > 50 * 1024 * 1024) {
         throw new Error('exceeds 50MB');
       }
-      const rows = await parseFile(file, setProgress);
-      setProgress(90);
-      if (!rows.length) throw new Error('Empty file');
-      const info = analyzeDataset(file, rows);
-      setDataset(info);
-      setProgress(100);
-      showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بنجاح` : `✅ Attached ${info.rows.toLocaleString()} records`);
+
+      if (file.size > 10 * 1024 * 1024) {
+        // Large file (> 10MB) -> Send to backend Celery worker
+        setLoadMsg(lang === 'ar' ? 'جاري إرفاق ومعالجة الملف في السيرفر...' : 'Attaching and processing on server...');
+        const res = await datasetsApi.uploadLarge(file);
+        
+        const jobId = res.job_id;
+        let statusRes;
+        
+        while (true) {
+          await new Promise(r => setTimeout(r, 2000));
+          statusRes = await datasetsApi.getUploadStatus(jobId);
+          
+          if (statusRes.status === 'processing') {
+            setProgress(statusRes.progress || 10);
+            setLoadMsg(statusRes.message || (lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'));
+          } else if (statusRes.status === 'done' || statusRes.status === 'success') {
+            break;
+          } else if (statusRes.status === 'error' || statusRes.status === 'failure') {
+            throw new Error(statusRes.message || 'Error processing file');
+          }
+        }
+        
+        const { convertBackendResultToDatasetInfo } = await import('./lib/dataUtils');
+        const info = convertBackendResultToDatasetInfo(statusRes as any);
+        setDataset(info);
+        setProgress(100);
+        showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بسرعة فائقة` : `✅ Attached ${info.rows.toLocaleString()} records ultra-fast`);
+        
+      } else {
+        // Small file -> Parse in browser
+        const rows = await parseFile(file, setProgress);
+        setProgress(90);
+        if (!rows.length) throw new Error('Empty file');
+        const info = analyzeDataset(file, rows);
+        setDataset(info);
+        setProgress(100);
+        showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بنجاح` : `✅ Attached ${info.rows.toLocaleString()} records`);
+        
+        datasetsApi.storeFileOnly(file).catch(err => console.error("Cloud save failed:", err));
+      }
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const msg = errorMessage === 'exceeds 50MB' 

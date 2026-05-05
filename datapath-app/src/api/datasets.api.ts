@@ -11,6 +11,21 @@ export const datasetsApi = {
     return data;
   },
 
+  /** Upload a large file; returns a job_id for polling */
+  uploadLarge: async (file: File): Promise<{ job_id: string; status: string; message: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await apiClient.post("/api/upload/large", form);
+    return data;
+  },
+
+  /** Poll the status of a large file upload */
+  getUploadStatus: async (job_id: string): Promise<any> => {
+    const { data } = await apiClient.get(`/api/upload/status/${job_id}`);
+    return data;
+  },
+
+
   /** Safe upload just to store in MinIO without Pandas processing */
   storeFileOnly: async (file: File): Promise<{ saved_to_storage: boolean; minio_path: string }> => {
     const form = new FormData();
