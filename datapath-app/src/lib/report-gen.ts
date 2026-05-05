@@ -5,7 +5,6 @@
  */
 
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import type { DatasetInfo } from '../types';
 import logoImg from '../assets/logo.png';
 
@@ -27,7 +26,6 @@ export interface ReportOptions {
   title?: string;
   subtitle?: string;
   author?: string;
-  chartElementIds?: string[];
   insights?: { title: string; description: string; type: 'info' | 'positive' | 'warning' }[];
 }
 
@@ -266,29 +264,6 @@ function drawInsightsAndSuggestions(
   });
 }
 
-// ── Chart Capture ─────────────────────────────────────────────────────────────
-async function drawChartPage(doc: jsPDF, elementId: string, title: string): Promise<void> {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  try {
-    const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#0a0f1d', useCORS: true, allowTaint: true, logging: false });
-    doc.addPage();
-    const W = doc.internal.pageSize.getWidth(); const H = doc.internal.pageSize.getHeight();
-    fillRect(doc, BRAND.bg, 0, 0, W, H);
-    let y = 26;
-    y = drawSectionHeader(doc, title, y);
-    y += 4;
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const maxW = W - 20; const maxH = H - y - 20;
-    const ratio = canvas.width / canvas.height;
-    const imgW = Math.min(maxW, maxH * ratio); const imgH = imgW / ratio;
-    const cx = (W - imgW) / 2;
-    doc.addImage(imgData, 'JPEG', cx, y, imgW, imgH);
-  } catch (err) {
-    console.warn(`[ReportGen] Capture failed for #${elementId}:`, err);
-  }
-}
-
 // ── Public API ────────────────────────────────────────────────────────────────
 export async function generateExecutiveReport(
   info: DatasetInfo,
@@ -313,12 +288,6 @@ export async function generateExecutiveReport(
   doc.addPage();
   fillRect(doc, BRAND.bg, 0, 0, 210, 297);
   drawInsightsAndSuggestions(doc, info, insightsToRender);
-
-  // Pages 4+: Charts
-  const chartIds = options.chartElementIds ?? [];
-  for (let i = 0; i < chartIds.length; i++) {
-    await drawChartPage(doc, chartIds[i], `05.${i + 1}  VISUALIZATION — ${chartIds[i].replace(/-/g, ' ').toUpperCase()}`);
-  }
 
   // Add Headers/Footers
   const totalPages = doc.getNumberOfPages();

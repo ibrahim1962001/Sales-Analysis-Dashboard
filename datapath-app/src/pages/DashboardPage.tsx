@@ -314,15 +314,10 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
   const handleExecutiveReport = useCallback(async () => {
     if (!info) return;
     setReportGenerating(true);
-    const chartIds = [
-      ...customCharts.map((_, i) => `custom-chart-${i}`),
-      ...info.charts.slice(0, 4).map((_, i) => `kimit-chart-${i}`),
-    ];
     await generateExecutiveReport(info, health, {
       title: `${info.filename} — Executive Report`,
       subtitle: 'Kimit AI Studio — Advanced Analytics',
       author: 'Kimit AI System',
-      chartElementIds: chartIds,
       insights: insights.map(ins => ({ title: ins.title, description: ins.description, type: ins.type })),
     });
     setReportGenerating(false);
