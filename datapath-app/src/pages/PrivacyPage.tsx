@@ -1,42 +1,33 @@
 import React from 'react';
 import { Shield, Database, Lock, ShieldAlert } from 'lucide-react';
-import type { Lang } from '../types';
 
-interface Props { lang: Lang; }
+interface Props {}
 
-export const PrivacyPage: React.FC<Props> = ({ lang }) => {
-  const isAr = lang === 'ar';
-  
+export const PrivacyPage: React.FC<Props> = ({ }) => {
   const sections = [
     {
       icon: Shield,
-      title: isAr ? 'معالجة محلية' : 'Local Processing',
-      desc: isAr 
-        ? 'تتم جميع عمليات تحليل البيانات داخل متصفحك مباشرة. بياناتك لا تغادر جهازك أبداً.' 
-        : 'All data analysis happens directly in your browser. Your data never leaves your device.'
+      title: 'Local Processing',
+      desc: 'All data analysis happens directly in your browser. Your data never leaves your device.'
     },
     {
       icon: Database,
-      title: isAr ? 'تخزين مؤقت' : 'Temporary Storage',
-      desc: isAr 
-        ? 'نستخدم ذاكرة المتصفح المؤقتة فقط. لا يتم تخزين سجلاتك على أي خوادم سحابية.' 
-        : 'We use temporary browser memory only. Your records are never stored on cloud servers.'
+      title: 'Temporary Storage',
+      desc: 'We use temporary browser memory only. Your records are never stored on cloud servers.'
     },
     {
       icon: Lock,
-      title: isAr ? 'أمان تام' : 'Full Security',
-      desc: isAr 
-        ? 'التزام تام بمعايير حماية البيانات العالمية لضمان سيادة بياناتك.' 
-        : 'Full commitment to global data protection standards to ensure your data sovereignty.'
+      title: 'Full Security',
+      desc: 'Full commitment to global data protection standards to ensure your data sovereignty.'
     }
   ];
 
   return (
-    <div className="p-section" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="p-section" dir="ltr">
       <header className="p-header p-flex-center">
         <ShieldAlert size={36} className="p-icon-box" style={{ marginBottom: 0 }} />
         <h1 className="p-title" style={{ marginBottom: 0 }}>
-          {isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}
+          Privacy Policy
         </h1>
       </header>
 
@@ -58,7 +49,7 @@ export const PrivacyPage: React.FC<Props> = ({ lang }) => {
 
       <footer style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
         <p className="p-subtitle">
-          {isAr ? 'آخر تحديث: أبريل 2026' : 'Last Updated: April 2026'}
+          Last Updated: April 2026
         </p>
       </footer>
     </div>

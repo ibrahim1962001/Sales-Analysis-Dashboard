@@ -1,4 +1,4 @@
-import type { DatasetInfo, Lang } from '../types';
+import type { DatasetInfo } from '../types';
 
 // Set this via environment or UI rather than hardcoding a real key.
 const LLAMA_API_KEY = import.meta.env.VITE_OPENROUTER_KEY || '';
@@ -8,12 +8,12 @@ export interface ChatParams {
   history: { role: 'user' | 'assistant'; content: string }[];
   apiKey?: string;
   dataset: DatasetInfo | null;
-  lang: Lang;
+  
   aiModel?: 'llama' | 'nemotron'; // Added to allow choosing the model
 }
 
 export async function askAI(params: ChatParams): Promise<string> {
-  const { question, history, apiKey, dataset, lang } = params;
+  const { question, history, apiKey, dataset, } = params;
   
   // Exclusively using Gemini 2.0 Flash via OpenRouter
   const activeApiKey = apiKey || LLAMA_API_KEY; // Reusing LLAMA_API_KEY as the default OpenRouter key
@@ -28,7 +28,7 @@ You are DataPath AI, the Ultimate Master Architect. You possess over 100+ profes
 4. STRATEGIC PLANNING & PRODUCT MANAGEMENT: Expert in Agile/Scrum, Roadmapping, Tech Debt Management, and MVP Strategy.
 5. EXPERT PROBLEM SOLVING & REASONING: Practitioner of First Principles Thinking, Root Cause Analysis, and Lateral Thinking.
 
-User's Language: ${lang === 'ar' ? 'Arabic' : 'English'}.
+User's Language: English.
 
 ${dataset ? `CURRENT DATASET CONTEXT:
 - Filename: ${dataset.filename}
@@ -41,7 +41,7 @@ RULES:
 2. PROFESSIONAL DATA ANALYST: When analyzing data, provide deep insights, identify correlations, and suggest actionable business recommendations.
 3. ARCHITECT TONE: Be professional, authoritative yet helpful, and concise. Use clean Markdown formatting.
 4. CROSS-SKILL APPLICATION: If the user asks about design, coding, or strategy, apply your 100+ skills to provide the best possible solution.
-5. LANGUAGE: Always respond in the user's language (${lang === 'ar' ? 'Arabic' : 'English'}).
+5. LANGUAGE: Always respond in English.
   `.trim();
 
   const messages = [
@@ -68,13 +68,13 @@ RULES:
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error(lang === 'ar' ? 'مفتاح API غير صحيح أو مفقود. يرجى التحقق من الإعدادات.' : 'Invalid or missing API Key. Please check settings.');
+      throw new Error('Invalid or missing API Key. Please check settings.');
     } else if (response.status === 429) {
-      throw new Error(lang === 'ar' ? 'تم تجاوز الحد المسموح للطلبات. يرجى المحاولة لاحقاً.' : 'Rate limit exceeded. Please try again later.');
+      throw new Error('Rate limit exceeded. Please try again later.');
     } else if (response.status >= 500) {
-      throw new Error(lang === 'ar' ? 'مشكلة في خوادم الذكاء الاصطناعي. يرجى المحاولة لاحقاً.' : 'AI server issue. Please try again later.');
+      throw new Error('AI server issue. Please try again later.');
     } else {
-      throw new Error(lang === 'ar' ? 'حدث خطأ غير متوقع في معالجة طلبك.' : 'An unexpected error occurred while processing your request.');
+      throw new Error('An unexpected error occurred while processing your request.');
     }
   }
 
@@ -82,7 +82,7 @@ RULES:
   return data.choices[0]?.message?.content ?? '';
 }
 
-export async function generateExecutiveSummary(dataset: DatasetInfo, apiKey: string | undefined, lang: Lang): Promise<import('../types').SummaryReport> {
+export async function generateExecutiveSummary(dataset: DatasetInfo, apiKey: string | undefined): Promise<import('../types').SummaryReport> {
   const numCols = dataset.columns.filter(c => c.type === 'numeric').map(c => c.name).join(', ');
   const txtCols = dataset.columns.filter(c => c.type === 'text').map(c => c.name).join(', ');
   
@@ -111,7 +111,7 @@ Analyze this data and produce a structured report containing:
 5. Actionable Recommendations — 3 specific actions the user can take right now to improve the data or boost performance
 6. Suggested Analysis Opportunities — Additional analyses that could deliver high value from this data
 
-Write in ${lang === 'ar' ? 'Arabic' : 'English'}. Be precise and actionable. Do not write generic statements — every point must be based on actual numbers from the data.
+Write in English. Be precise and actionable. Do not write generic statements — every point must be based on actual numbers from the data.
 You MUST respond with ONLY valid JSON in the following exact format:
 {
   "executiveSummary": "...",
@@ -161,29 +161,23 @@ You MUST respond with ONLY valid JSON in the following exact format:
     };
   } catch (err) {
     console.warn('AI Summary failed, falling back to local JS analysis:', err);
-    return generateLocalSummary(dataset, lang);
+    return generateLocalSummary(dataset);
   }
 }
 
-function generateLocalSummary(dataset: DatasetInfo, lang: Lang): import('../types').SummaryReport {
-  const isAr = lang === 'ar';
-  
+function generateLocalSummary(dataset: DatasetInfo): import('../types').SummaryReport {
   // 1. Executive Summary
-  const executiveSummary = isAr 
-    ? `تم تحليل مجموعة بيانات تحتوي على ${dataset.rows} سجل و${dataset.columns.length} عمود. البيانات تحتوي على مزيج من المتغيرات الرقمية والنصية.` 
-    : `Analyzed a dataset with ${dataset.rows} records and ${dataset.columns.length} columns. The data contains a mix of numeric and text variables.`;
+  const executiveSummary = `Analyzed a dataset with ${dataset.rows} records and ${dataset.columns.length} columns. The data contains a mix of numeric and text variables.`;
 
   // 2. Insights
   const insights: string[] = [];
   const numericCols = dataset.columns.filter(c => c.type === 'numeric');
   numericCols.forEach(c => {
     if (c.mean !== undefined && c.max !== undefined) {
-      insights.push(isAr 
-        ? `العمود "${c.name}" له متوسط ${c.mean.toFixed(2)} وأعلى قيمة تصل إلى ${c.max.toFixed(2)}.` 
-        : `Column "${c.name}" has an average of ${c.mean.toFixed(2)} with a maximum value of ${c.max.toFixed(2)}.`);
+      insights.push(`Column "${c.name}" has an average of ${c.mean.toFixed(2)} with a maximum value of ${c.max.toFixed(2)}.`);
     }
   });
-  if (insights.length === 0) insights.push(isAr ? 'لا توجد بيانات رقمية كافية لاستخراج رؤى.' : 'Not enough numeric data to extract insights.');
+  if (insights.length === 0) insights.push('Not enough numeric data to extract insights.');
 
   // 3. Warnings (Outliers > 3 std dev)
   const warnings: string[] = [];
@@ -192,32 +186,29 @@ function generateLocalSummary(dataset: DatasetInfo, lang: Lang): import('../type
       warnings.push(`${a.column}: ${a.description}`);
     });
   } else {
-    warnings.push(isAr ? 'لم يتم اكتشاف قيم شاذة بشكل واضح.' : 'No clear anomalies detected.');
+    warnings.push('No clear anomalies detected.');
   }
 
-  // 4. Quality Issues
   const qualityIssues: string[] = [];
   if (dataset.duplicates > 0) {
-    qualityIssues.push(isAr ? `يوجد ${dataset.duplicates} سجل مكرر.` : `Found ${dataset.duplicates} duplicate records.`);
+    qualityIssues.push(`Found ${dataset.duplicates} duplicate records.`);
   }
   dataset.columns.forEach(c => {
     if (c.nullCount > 0) {
       const pct = ((c.nullCount / dataset.rows) * 100).toFixed(1);
-      qualityIssues.push(isAr ? `العمود "${c.name}" يفقد ${c.nullCount} قيمة (${pct}%).` : `Column "${c.name}" is missing ${c.nullCount} values (${pct}%).`);
+      qualityIssues.push(`Column "${c.name}" is missing ${c.nullCount} values (${pct}%).`);
     }
   });
-  if (qualityIssues.length === 0) qualityIssues.push(isAr ? 'البيانات تبدو نظيفة وخالية من المشاكل الواضحة.' : 'Data appears clean with no obvious issues.');
+  if (qualityIssues.length === 0) qualityIssues.push('Data appears clean with no obvious issues.');
 
   // 5. Recommendations
   const recommendations: string[] = [];
-  if (dataset.duplicates > 0) recommendations.push(isAr ? 'إزالة السجلات المكررة لتحسين دقة التحليل.' : 'Remove duplicate records to improve analysis accuracy.');
-  if (dataset.totalNulls > 0) recommendations.push(isAr ? 'معالجة القيم المفقودة (إما بالحذف أو التعويض بالمتوسط).' : 'Handle missing values (either delete or impute with mean).');
-  recommendations.push(isAr ? 'استكشاف العلاقات (Correlations) بين المتغيرات الرقمية.' : 'Explore correlations between numeric variables.');
+  if (dataset.duplicates > 0) recommendations.push('Remove duplicate records to improve analysis accuracy.');
+  if (dataset.totalNulls > 0) recommendations.push('Handle missing values (either delete or impute with mean).');
+  recommendations.push('Explore correlations between numeric variables.');
 
   // 6. Opportunities
-  const opportunities = isAr 
-    ? ['تحليل السلاسل الزمنية إذا كان هناك عمود للتاريخ.', 'تجميع البيانات (Clustering) لاكتشاف أنماط مخفية.']
-    : ['Time series analysis if a date column exists.', 'Data clustering to discover hidden patterns.'];
+  const opportunities = ['Time series analysis if a date column exists.', 'Data clustering to discover hidden patterns.'];
 
   return {
     isLocal: true,
@@ -230,11 +221,11 @@ function generateLocalSummary(dataset: DatasetInfo, lang: Lang): import('../type
   };
 }
 
-export function speakText(text: string, lang: Lang) {
+export function speakText(text: string) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text.replace(/[#*]/g, ''));
-  utterance.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
+  utterance.lang = 'en-US';
   utterance.rate = 1.0;
   window.speechSynthesis.speak(utterance);
 }

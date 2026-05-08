@@ -1,4 +1,4 @@
-export type Lang = 'ar' | 'en';
+
 
 export interface DataRow {
   [key: string]: string | number | null;
@@ -66,9 +66,7 @@ export interface QuickQuestion {
   id: string;
   icon: string;
   label: string;
-  labelEn: string;
   prompt: string;
-  promptEn: string;
   category: 'data' | 'general' | 'analysis';
 }
 

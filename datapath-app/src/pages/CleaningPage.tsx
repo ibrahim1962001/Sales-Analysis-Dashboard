@@ -1,23 +1,14 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Sparkles, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { DatasetInfo, Lang, DataRow } from '../types';
+import type { DatasetInfo, DataRow } from '../types';
 import { analyzeDataset } from '../lib/dataUtils';
 import { AdSpace } from '../components/AdSpace';
 import { CreatorFooter } from '../components/CreatorFooter';
 import { AD_PROVIDERS } from '../config/adConfig';
 
-interface Props { info: DatasetInfo; lang: Lang; onClean: () => void; onUpdate?: (info: DatasetInfo) => void; }
+interface Props { info: DatasetInfo;  onClean: () => void; onUpdate?: (info: DatasetInfo) => void; }
 
 const T = {
-  ar: {
-    title: 'تنقية البيانات', sub: 'راجع وتحقق من جودة البيانات',
-    cleanBtn: 'تنقية آلية خارقة', cleanDesc: 'يملأ القيم المفقودة بالوسيط/الأكثر تكراراً ويزيل الصفوف المكررة.', preview: 'معاينة البيانات',
-    missing2: 'مفقود', unique: 'فريد', total: 'الإجمالي', min: 'أدنى', max: 'أعلى', mean: 'متوسط',
-    numeric: 'رقمي', text: 'نصي', topVals: 'أكثر القيم', noNulls: '✅ لا توجد قيم مفقودة',
-    missingCard: 'قيم مفقودة', dupCard: 'صفوف مكررة', typeCard: 'عدم تطابق نوع', sensitiveCard: 'بيانات حساسة',
-    fix: 'إصلاح', encrypt: 'تشفير',
-    editHint: 'انقر مرتين على أي خلية لتعديلها',
-  },
   en: {
     title: 'Data Cleaning', sub: 'Review and verify data quality',
     cleanBtn: 'Super Auto-Purge', cleanDesc: 'Fills missing values with median/mode and removes duplicate rows.', preview: 'Data Preview',
@@ -29,8 +20,8 @@ const T = {
   }
 };
 
-export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate }) => {
-  const t = T[lang];
+export const CleaningPage: React.FC<Props> = ({ info, onClean, onUpdate }) => {
+  const t = T.en;
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 20;
   const totalPages = Math.ceil(info.workData.length / rowsPerPage);
@@ -91,8 +82,8 @@ export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate })
   const cleaningAdProvider = AD_PROVIDERS.filter(p => p.id === 'adsterra_main');
 
   return (
-    <div className="page clean-page" dir="rtl">
-      {/* بانر إعلاني */}
+    <div className="page clean-page" dir="ltr">
+      {/* Ad Banner */}
       <div className="cleaning-ad-top">
         <AdSpace type="responsive" providers={cleaningAdProvider} minHeight={90} />
       </div>
@@ -104,7 +95,7 @@ export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate })
             <Sparkles size={16} /> ✦ {t.cleanBtn}
           </button>
           <button className="clean-action-btn secondary" onClick={handleAnonymize}>
-            <ShieldCheck size={16} /> {lang === 'ar' ? 'تشفير البيانات الحساسة' : 'Anonymize Data'} ✓
+            <ShieldCheck size={16} /> Anonymize Data ✓
           </button>
         </div>
         <div className="clean-topbar-title">
@@ -152,7 +143,7 @@ export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate })
       </div>
 
       {/* ─── Column Stats Section ─── */}
-      <div className="section-title">{lang === 'ar' ? 'إحصائيات الأعمدة' : 'Column Statistics'}</div>
+      <div className="section-title">Column Statistics</div>
       <div className="clean-col-grid">
         {info.columns.map(col => (
           <div key={col.name} className={`clean-col-card ${col.nullCount > 0 ? 'has-issues' : ''}`}>
@@ -239,7 +230,7 @@ export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate })
                       contentEditable={true}
                       suppressContentEditableWarning={true}
                       onBlur={(e) => handleCellEdit(i, c.name, e.target.textContent || '')}
-                      title={isAnomaly ? (lang === 'ar' ? 'قيمة شاذة محتملة' : 'Potential Anomaly') : ''}
+                      title={isAnomaly ? 'Potential Anomaly' : ''}
                     >
                       {!isNull ? String(row[c.name]).slice(0, 30) : '—'}
                     </td>
@@ -274,11 +265,11 @@ export const CleaningPage: React.FC<Props> = ({ info, lang, onClean, onUpdate })
         </div>
       )}
 
-      <CreatorFooter lang={lang} />
+      <CreatorFooter />
 
       <style>{`
         /* ─── Cleaning Page Layout ─── */
-        .clean-page { direction: rtl; }
+        .clean-page { direction: ltr; }
 
         .clean-topbar {
           display: flex; justify-content: space-between; align-items: center;

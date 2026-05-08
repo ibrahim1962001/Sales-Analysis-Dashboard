@@ -2,23 +2,18 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { X, Table, Sparkles, Save } from 'lucide-react';
 import { DataGrid } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
-import type { DataRow, DatasetInfo, Lang } from '../types';
+import type { DataRow, DatasetInfo } from '../types';
 import { analyzeDataset } from '../lib/dataUtils';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   info: DatasetInfo | null;
-  lang: Lang;
+  
   onUpdate?: (info: DatasetInfo) => void;
 }
 
 const T = {
-  ar: {
-    title: 'جدول البيانات العبقري (Excel Playground)',
-    hint: 'انقر نقراً مزدوجاً بالماوس على أي خلية لتعديلها. يمكنك تغيير أي بيانات يدوياً هنا قبل تصديرها!',
-    saveBtn: 'حفظ التغييرات وتحديث الداشبورد',
-  },
   en: {
     title: 'Excel Playground',
     hint: 'Double click on any cell to edit it. You can change any data manually before exporting!',
@@ -45,8 +40,8 @@ const CustomTextEditor = ({ row, column, onRowChange, onClose }: TextEditorProps
   );
 };
 
-export const EditorSidebar: React.FC<Props> = ({ isOpen, onClose, info, lang, onUpdate }) => {
-  const t = T[lang];
+export const EditorSidebar: React.FC<Props> = ({ isOpen, onClose, info, onUpdate }) => {
+  const t = T.en;
   const [gridData, setGridData] = useState<DataRow[]>([]);
 
   useEffect(() => {
@@ -73,7 +68,7 @@ export const EditorSidebar: React.FC<Props> = ({ isOpen, onClose, info, lang, on
      const dummyFile = new File([''], info.filename);
      Object.defineProperty(dummyFile, 'size', { value: info.fileSize });
      onUpdate(analyzeDataset(dummyFile, [...gridData]));
-     alert(lang === 'ar' ? '✅ تم حفظ التعديلات وتحديث كل الرسوم البيانية بنجاح!' : '✅ Edits saved and all charts updated successfully!');
+     alert('✅ Edits saved and all charts updated successfully!');
   };
 
   if (!info) return null;
@@ -136,7 +131,7 @@ export const EditorSidebar: React.FC<Props> = ({ isOpen, onClose, info, lang, on
              rows={gridData}
              onRowsChange={setGridData}
              className="rdg-light"
-             direction={lang === 'ar' ? 'rtl' : 'ltr'}
+             direction="ltr"
            />
          </div>
       </div>

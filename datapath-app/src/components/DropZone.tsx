@@ -1,23 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, FileSpreadsheet, PlayCircle } from 'lucide-react';
-import type { Lang } from '../types';
 import { GoogleSheetsPicker } from './GoogleSheetsPicker';
 
 interface Props {
-  lang: Lang;
+  
   onFile: (file: File) => void;
 }
 
 const T = {
-  ar: {
-    title: 'اسحب ملف البيانات هنا',
-    sub: 'أو اضغط لاختيار ملف من جهازك',
-    hint: 'يدعم CSV و Excel (XLSX, XLS)',
-    badge: 'يعمل بالكامل في المتصفح · بياناتك لا تغادر جهازك',
-    sampleBtn: 'جرب ملف عينة',
-    or: '— أو —',
-  },
   en: {
     title: 'Drag your data file here',
     sub: 'or click to choose a file from your device',
@@ -37,14 +28,14 @@ Sarah,31,UK,1400,2023-02-15
 Omar,22,Jordan,900,2023-03-01
 Elena,27,Italy,2100,2023-03-05`;
 
-export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
-  const t = T[lang];
+export const DropZone: React.FC<Props> = ({ onFile }) => {
+  const t = T.en;
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (fileRejections.length > 0) {
-        setError(lang === 'ar' ? 'عذراً، هذا النوع من الملفات غير مدعوم' : 'Sorry, this file type is not supported');
+        setError('Sorry, this file type is not supported');
         return;
       }
       if (acceptedFiles[0]) {
@@ -52,7 +43,7 @@ export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
         onFile(acceptedFiles[0]);
       }
     },
-    [onFile, lang]
+    [onFile]
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -90,7 +81,7 @@ export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
           )}
         </div>
         <h3 className="dropzone-title">
-          {isDragActive ? (lang === 'ar' ? 'أفلت الملف الآن! 🎯' : 'Drop it now! 🎯') : t.title}
+          {isDragActive ? 'Drop it now! 🎯' : t.title}
         </h3>
         <p className="dropzone-sub">{t.sub}</p>
         <div className="dropzone-formats">
@@ -112,7 +103,7 @@ export const DropZone: React.FC<Props> = ({ lang, onFile }) => {
       </div>
 
       {/* ─── Google Sheets Picker ─── */}
-      <GoogleSheetsPicker onFile={onFile} lang={lang} />
+      <GoogleSheetsPicker onFile={onFile} />
 
       {/* ─── Sample Button ─── */}
       <button onClick={handleSample} className="sample-data-btn">

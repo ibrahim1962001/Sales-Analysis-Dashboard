@@ -24,7 +24,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // إغلاق عند الضغط خارج النافذة
+  // Close on click outside window
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
@@ -36,7 +36,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
     return () => document.removeEventListener('mousedown', handler);
   }, [isOpen, onClose]);
 
-  // إغلاق عند الضغط على Escape
+  // Close on Escape key press
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -44,16 +44,16 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  // إعادة ضبط الحقول عند الفتح
+  // Reset fields on open
   useEffect(() => {
     if (isOpen) { setError(null); setEmail(''); setPassword(''); setMode('login'); }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // ─── تسجيل الدخول بـ Google ────────────────────────────────────────────────
-  // 💡 هذه هي الدالة التي تستدعي تسجيل Google — يمكنك استبدال محتواها
-  //    بدالتك الخاصة إذا كنت تستخدم نظاماً مختلفاً عن Firebase.
+  // ─── Google Sign In ────────────────────────────────────────────────
+  // 💡 This is the function that calls Google sign in — you can replace its content
+  //    with your own if you use a system other than Firebase.
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
@@ -63,17 +63,17 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
-        if (err.message.includes('popup-closed-by-user')) setError('تم إغلاق نافذة تسجيل الدخول.');
-        else if (err.message.includes('network-request-failed')) setError('خطأ في الاتصال. تحقق من الإنترنت.');
-        else setError('فشل تسجيل الدخول بـ Google.');
+        if (err.message.includes('popup-closed-by-user')) setError('Login window closed.');
+        else if (err.message.includes('network-request-failed')) setError('Connection error. Check your internet.');
+        else setError('Google Sign-In failed.');
       }
     } finally { setLoading(false); }
   };
 
-  // ─── تسجيل بالإيميل ────────────────────────────────────────────────────────
+  // ─── Email Sign In ────────────────────────────────────────────────────────
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setError('يرجى إدخال البريد الإلكتروني وكلمة المرور.'); return; }
+    if (!email || !password) { setError('Please enter email and password.'); return; }
     setLoading(true);
     setError(null);
     try {
@@ -86,12 +86,12 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
-        if (err.message.includes('email-already-in-use')) setError('هذا البريد مستخدم بالفعل.');
-        else if (err.message.includes('user-not-found')) setError('لا يوجد حساب بهذا البريد.');
-        else if (err.message.includes('wrong-password')) setError('كلمة المرور غير صحيحة.');
-        else if (err.message.includes('weak-password')) setError('كلمة المرور ضعيفة (6 أحرف على الأقل).');
-        else if (err.message.includes('invalid-email')) setError('البريد الإلكتروني غير صالح.');
-        else setError('حدث خطأ. حاول مرة أخرى.');
+        if (err.message.includes('email-already-in-use')) setError('Email already in use.');
+        else if (err.message.includes('user-not-found')) setError('No account with this email.');
+        else if (err.message.includes('wrong-password')) setError('Incorrect password.');
+        else if (err.message.includes('weak-password')) setError('Weak password (min 6 characters).');
+        else if (err.message.includes('invalid-email')) setError('Invalid email.');
+        else setError('An error occurred. Try again.');
       }
     } finally { setLoading(false); }
   };
@@ -99,15 +99,15 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
   return (
     <>
       {/* Overlay */}
-      <div className="lp-overlay" aria-modal="true" role="dialog" aria-label="نافذة تسجيل الدخول">
+      <div className="lp-overlay" aria-modal="true" role="dialog" aria-label="Login Window">
         {/* Card */}
         <div className="lp-card" ref={cardRef}>
-          {/* زر الإغلاق */}
-          <button className="lp-close" onClick={onClose} aria-label="إغلاق">
+          {/* Close button */}
+          <button className="lp-close" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
 
-          {/* شعار Google صغير مع العنوان */}
+          {/* Small Google logo with title */}
           <div className="lp-header">
             <div className="lp-logo-badge">
               <svg viewBox="0 0 24 24" width="22" height="22">
@@ -119,13 +119,13 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
             </div>
             <div>
               <h2 className="lp-title">
-                {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
+                {mode === 'login' ? 'Sign In' : 'Create Account'}
               </h2>
-              <p className="lp-subtitle">مرحباً بك في Kimit AI Studio</p>
+              <p className="lp-subtitle">Welcome to Kimit AI Studio</p>
             </div>
           </div>
 
-          {/* رسالة الخطأ */}
+          {/* Error message */}
           {error && (
             <div className="lp-error" role="alert">
               <AlertCircle size={13} />
@@ -133,8 +133,8 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
             </div>
           )}
 
-          {/* ─── زر Google الرئيسي ─────────────────────────────────────────── */}
-          {/* 👇 استبدل { handleGoogleSignIn } بدالتك: مثلاً signInWithGoogle() */}
+          {/* ─── Main Google Button ─────────────────────────────────────────── */}
+          {/* 👇 Replace { handleGoogleSignIn } with your function: e.g. signInWithGoogle() */}
           <button
             id="lp-google-btn"
             className="lp-google-btn"
@@ -152,22 +152,22 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
             )}
-            <span>{loading ? 'جاري التسجيل...' : 'استمر بحساب Google'}</span>
+            <span>{loading ? 'Signing in...' : 'Continue with Google'}</span>
           </button>
 
-          {/* فاصل "أو" */}
-          <div className="lp-divider"><span>أو</span></div>
+          {/* "OR" divider */}
+          <div className="lp-divider"><span>or</span></div>
 
-          {/* ─── نموذج الإيميل ─────────────────────────────────────────────── */}
+          {/* ─── Email Form ─────────────────────────────────────────────── */}
           <form className="lp-form" onSubmit={handleEmailAuth} noValidate>
-            {/* حقل البريد الإلكتروني */}
+            {/* Email field */}
             <div className="lp-field">
               <Mail size={15} className="lp-field-icon" />
               <input
                 id="lp-email"
                 type="email"
                 className="lp-input"
-                placeholder="البريد الإلكتروني"
+                placeholder="Email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 autoComplete="email"
@@ -176,14 +176,14 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
               />
             </div>
 
-            {/* حقل كلمة المرور */}
+            {/* Password field */}
             <div className="lp-field">
               <Lock size={15} className="lp-field-icon" />
               <input
                 id="lp-password"
                 type={showPass ? 'text' : 'password'}
                 className="lp-input lp-input-pass"
-                placeholder="كلمة المرور"
+                placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
@@ -195,13 +195,13 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
                 className="lp-eye-btn"
                 onClick={() => setShowPass(v => !v)}
                 tabIndex={-1}
-                aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                aria-label={showPass ? 'Hide Password' : 'Show Password'}
               >
                 {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
 
-            {/* زر الإرسال */}
+            {/* Submit button */}
             <button
               id="lp-submit-btn"
               type="submit"
@@ -209,24 +209,24 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
               disabled={loading}
             >
               {loading ? <Loader2 size={16} className="lp-spin" /> : null}
-              {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء الحساب'}
+              {mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
-          {/* رابط التبديل بين التسجيل وإنشاء حساب */}
+          {/* Link to toggle between sign in and create account */}
           <p className="lp-switch">
             {mode === 'login' ? (
               <>
-                ليس لديك حساب؟{' '}
+                Don't have an account?{' '}
                 <button type="button" className="lp-switch-btn" onClick={() => { setMode('register'); setError(null); }}>
-                  إنشاء حساب جديد
+                  Create a new account
                 </button>
               </>
             ) : (
               <>
-                لديك حساب بالفعل؟{' '}
+                Already have an account?{' '}
                 <button type="button" className="lp-switch-btn" onClick={() => { setMode('login'); setError(null); }}>
-                  تسجيل الدخول
+                  Sign In
                 </button>
               </>
             )}
@@ -234,9 +234,9 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
         </div>
       </div>
 
-      {/* ─── الأنماط المدمجة ──────────────────────────────────────────────────── */}
+      {/* ─── Inline Styles ──────────────────────────────────────────────────── */}
       <style>{`
-        /* Overlay: خلفية مظللة */
+        /* Overlay: Shaded background */
         .lp-overlay {
           position: fixed;
           inset: 0;
@@ -256,7 +256,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           to   { opacity: 1; }
         }
 
-        /* Card: النافذة نفسها */
+        /* Card: The window itself */
         .lp-card {
           position: relative;
           width: 100%;
@@ -274,7 +274,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
             inset 0 1px 0 rgba(255, 255, 255, 0.04);
           backdrop-filter: blur(24px);
           animation: lp-slide 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-          direction: rtl;
+          direction: ltr;
           font-family: 'Cairo', 'Inter', sans-serif;
         }
 
@@ -283,11 +283,11 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
 
-        /* زر الإغلاق */
+        /* Close button */
         .lp-close {
           position: absolute;
           top: 12px;
-          left: 12px;   /* يسار لأن الاتجاه RTL */
+          left: 12px;   /* left because direction is RTL */
           width: 28px;
           height: 28px;
           border-radius: 8px;
@@ -307,12 +307,12 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           border-color: rgba(239,68,68,0.3);
         }
 
-        /* رأس النافذة */
+        /* Window Header */
         .lp-header {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding-left: 8px; /* إبعاد عن زر X */
+          padding-left: 8px; /* space from X button */
         }
         .lp-logo-badge {
           width: 42px;
@@ -338,7 +338,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           margin: 3px 0 0;
         }
 
-        /* رسالة الخطأ */
+        /* Error message */
         .lp-error {
           display: flex;
           align-items: center;
@@ -352,7 +352,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           line-height: 1.4;
         }
 
-        /* زر Google */
+        /* Google Button */
         .lp-google-btn {
           display: flex;
           align-items: center;
@@ -383,7 +383,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
         .lp-google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
         .lp-g-icon { flex-shrink: 0; }
 
-        /* فاصل "أو" */
+        /* "OR" divider */
         .lp-divider {
           display: flex;
           align-items: center;
@@ -399,14 +399,14 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           background: rgba(255,255,255,0.06);
         }
 
-        /* النموذج */
+        /* Form */
         .lp-form {
           display: flex;
           flex-direction: column;
           gap: 10px;
         }
 
-        /* حقل الإدخال */
+        /* Input field */
         .lp-field {
           position: relative;
           display: flex;
@@ -440,7 +440,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
         .lp-input:disabled { opacity: 0.5; }
         .lp-input-pass { padding-left: 36px; }
 
-        /* زر إظهار/إخفاء كلمة المرور */
+        /* Show/hide password button */
         .lp-eye-btn {
           position: absolute;
           left: 10px;
@@ -455,7 +455,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
         }
         .lp-eye-btn:hover { color: #818cf8; }
 
-        /* زر الإرسال */
+        /* Submit button */
         .lp-submit-btn {
           display: flex;
           align-items: center;
@@ -483,7 +483,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
         .lp-submit-btn:active:not(:disabled) { transform: scale(0.98); }
         .lp-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-        /* رابط التبديل */
+        /* Toggle link */
         .lp-switch {
           font-size: 12px;
           color: #475569;
@@ -505,7 +505,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
         }
         .lp-switch-btn:hover { color: #a5b4fc; }
 
-        /* أيقونة التحميل الدوّارة */
+        /* Loading spinner icon */
         .lp-spin {
           animation: lp-spin-anim 0.7s linear infinite;
         }
@@ -513,7 +513,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
           to { transform: rotate(360deg); }
         }
 
-        /* ─── تصميم الموبايل ─────────────────────────────────────────────── */
+        /* ─── Mobile Design ─────────────────────────────────────────────── */
         @media (max-width: 480px) {
           .lp-overlay {
             align-items: flex-end;
@@ -527,7 +527,7 @@ export const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose, onSucce
             border-top-left-radius: 22px;
             border-top-right-radius: 22px;
             animation: lp-slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            padding-bottom: 32px; /* مسافة إضافية للـ safe area */
+            padding-bottom: 32px; /* Extra space for safe area */
           }
           @keyframes lp-slide-up {
             from { opacity: 0; transform: translateY(100%); }

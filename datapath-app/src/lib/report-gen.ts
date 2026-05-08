@@ -23,6 +23,7 @@ export interface ReportOptions {
   title?: string;
   subtitle?: string;
   author?: string;
+  aiSummary?: string;
   insights?: { title: string; description: string; type: 'info'|'positive'|'warning' }[];
 }
 
@@ -392,6 +393,42 @@ function drawPage3(
 }
 
 // ══════════════════════════════════════════════════════════════════
+// PAGE 4 — AI STRATEGY NARRATIVE (DYNAMIC)
+// ══════════════════════════════════════════════════════════════════
+function drawAIStrategyPage(d: jsPDF, summary: string) {
+  const W = d.internal.pageSize.getWidth();
+  let y = 30;
+
+  y = secHead(d, '07   AI EXECUTIVE NARRATIVE & STRATEGIC ADVISORY', y, C.gold);
+
+  fill(d, C.lightBg, 10, y, W - 20, 240);
+  d.setDrawColor(...C.border); d.rect(10, y, W - 20, 240, 'S');
+
+  d.setFont('helvetica', 'normal'); d.setFontSize(9); rgb(d, C.navy);
+  
+  // Format the text nicely
+  const lines = d.splitTextToSize(summary, W - 32);
+  let currentY = y + 14;
+  
+  lines.forEach((line: string) => {
+    // Basic bold detection for markdown like **text**
+    if (line.includes('**')) {
+      const parts = line.split('**');
+      let currentX = 16;
+      parts.forEach((part, idx) => {
+        d.setFont('helvetica', idx % 2 === 1 ? 'bold' : 'normal');
+        d.text(part, currentX, currentY);
+        currentX += d.getTextWidth(part);
+      });
+    } else {
+      d.setFont('helvetica', 'normal');
+      d.text(line, 16, currentY);
+    }
+    currentY += 6;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
 // PUBLIC API
 // ══════════════════════════════════════════════════════════════════
 export async function generateExecutiveReport(
@@ -416,6 +453,13 @@ export async function generateExecutiveReport(
   doc.addPage();
   fill(doc, C.white, 0, 0, 210, 297);
   drawPage3(doc, info, health, options.insights ?? []);
+
+  // Page 4 — AI Strategy (Optional)
+  if (options.aiSummary) {
+    doc.addPage();
+    fill(doc, C.white, 0, 0, 210, 297);
+    drawAIStrategyPage(doc, options.aiSummary);
+  }
 
   // Apply header/footer to pages 2+
   const total = doc.getNumberOfPages();

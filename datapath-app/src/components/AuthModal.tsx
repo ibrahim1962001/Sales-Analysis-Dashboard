@@ -28,14 +28,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       if (err instanceof Error) {
         // Firebase-specific error codes
         if (err.message.includes('popup-closed-by-user')) {
-          setError('تم إغلاق نافذة تسجيل الدخول.');
+          setError('Login window was closed.');
         } else if (err.message.includes('network-request-failed')) {
-          setError('خطأ في الاتصال. تحقق من الانترنت.');
+          setError('Connection error. Check your internet.');
         } else {
-          setError(`فشل تسجيل الدخول. (${err.message.split(' (')[0]})`);
+          setError(`Login failed. (${err.message.split(' (')[0]})`);
         }
       } else {
-        setError('حدث خطأ غير متوقع.');
+        setError('An unexpected error occurred.');
       }
     } finally {
       setLoading(false);
@@ -58,9 +58,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         </div>
 
         {/* Title */}
-        <h2 className="auth-title">مرحباً بك في Kimit AI</h2>
+        <h2 className="auth-title">Welcome to Kimit AI</h2>
         <p className="auth-subtitle">
-          {isFullscreen ? 'سجّل دخولك للوصول إلى المنصة' : 'سجّل دخولك للوصول إلى شات الذكاء الاصطناعي'}
+          {isFullscreen ? 'Sign in to access the platform' : 'Sign in to access the AI chat'}
         </p>
 
         {/* Error */}
@@ -87,22 +87,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
           )}
-          <span>{loading ? 'جاري التسجيل...' : 'تسجيل الدخول بحساب Google'}</span>
+          <span>{loading ? 'Signing in...' : 'Sign in with Google'}</span>
         </button>
 
         {/* Divider */}
         <div className="auth-divider">
-          <span>أو</span>
+          <span>or</span>
         </div>
 
         {/* Guest note */}
         <p className="auth-guest-note">
-          يمكنك تصفح المنصة كضيف، لكن الشات يتطلب تسجيل الدخول.
+          You can browse the platform as a guest, but chat requires sign in.
         </p>
 
         {/* Footer */}
         <p className="auth-footer">
-          بالمتابعة، أنت توافق على <span>شروط الاستخدام</span> و <span>سياسة الخصوصية</span>
+          By continuing, you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>
         </p>
       </div>
 
@@ -148,7 +148,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             inset 0 1px 0 rgba(255,255,255,0.05);
           backdrop-filter: blur(20px);
           animation: auth-card-in 0.3s ease;
-          direction: rtl;
+          direction: ltr;
           font-family: 'Cairo', 'Inter', sans-serif;
         }
 

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
 import { Eye, EyeOff } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const { showToast } = useToast();
+  if (user) return <Navigate to="/" replace />;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);

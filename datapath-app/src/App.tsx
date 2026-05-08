@@ -16,7 +16,6 @@ import { ComparisonPage } from './pages/ComparisonPage';
 import { SavedFilesPage } from './pages/SavedFilesPage';
 import { parseFile, analyzeDataset, cleanDataset } from './lib/dataUtils';
 import { datasetsApi } from './api/datasets.api';
-import type { Lang } from './types';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { get, set, del } from 'idb-keyval';
@@ -30,8 +29,7 @@ import { useKimitData } from './hooks/useKimitData';
 type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'files' | 'about' | 'privacy' | 'faq' | 'guide' | 'compare' | 'smart-dashboard';
 
 function App() {
-  const [lang, setLang] = useState<Lang>('en');
-  const [tab, setTab] = useState<Tab>('home');
+    const [tab, setTab] = useState<Tab>('home');
   const { info: dataset, setDataset } = useKimitData();
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,9 +42,9 @@ function App() {
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
 
   useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  }, [lang]);
+    
+    document.documentElement.dir = 'ltr';
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -91,7 +89,7 @@ function App() {
   const handleFile = useCallback(async (file: File) => {
     setLoading(true);
     setProgress(0);
-    setLoadMsg(lang === 'ar' ? 'جاري التحليل... انتظر قليلاً' : 'Analyzing... please wait');
+    setLoadMsg('Analyzing... please wait');
     try {
       if (file.size > 50 * 1024 * 1024) {
         throw new Error('exceeds 50MB');
@@ -99,7 +97,7 @@ function App() {
 
       if (file.size > 10 * 1024 * 1024) {
         // Large file (> 10MB) -> Try backend first, fallback to browser if backend unavailable
-        setLoadMsg(lang === 'ar' ? 'جاري التحميل والمعالجة في السيرفر...' : 'Uploading and processing on server...');
+        setLoadMsg('Uploading and processing on server...');
         try {
           const res = await datasetsApi.uploadLarge(file);
           const jobId = res.job_id;
@@ -111,7 +109,7 @@ function App() {
             
             if (statusRes.status === 'processing') {
               setProgress(statusRes.progress || 10);
-              setLoadMsg(statusRes.message || (lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'));
+              setLoadMsg(statusRes.message || 'Processing...');
             } else if (statusRes.status === 'done' || statusRes.status === 'success') {
               break;
             } else if (statusRes.status === 'error' || statusRes.status === 'failure') {
@@ -123,18 +121,18 @@ function App() {
           const info = convertBackendResultToDatasetInfo(statusRes as any);
           setDataset(info);
           setProgress(100);
-          showToast(lang === 'ar' ? `✅ تمت معالجة ${info.rows.toLocaleString()} سجل` : `✅ Processed ${info.rows.toLocaleString()} records`);
+          showToast(`✅ Processed ${info.rows.toLocaleString()} records`);
         } catch (_backendErr) {
           // Backend unavailable → fallback to browser parsing
           console.warn('Backend unavailable, falling back to browser parsing:', _backendErr);
-          setLoadMsg(lang === 'ar' ? 'جاري التحليل في المتصفح (وضع عدم الاتصال)...' : 'Analyzing in browser (offline mode)...');
+          setLoadMsg('Analyzing in browser (offline mode)...');
           const rows = await parseFile(file, setProgress);
           setProgress(90);
           if (!rows.length) throw new Error('Empty file');
           const info = analyzeDataset(file, rows);
           setDataset(info);
           setProgress(100);
-          showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
+          showToast(`✅ Loaded ${info.rows.toLocaleString()} records`);
         }
       } else {
         // Small file -> Parse in browser
@@ -144,13 +142,13 @@ function App() {
         const info = analyzeDataset(file, rows);
         setDataset(info);
         setProgress(100);
-        showToast(lang === 'ar' ? `✅ تم تحميل ${info.rows.toLocaleString()} سجل` : `✅ Loaded ${info.rows.toLocaleString()} records`);
+        showToast(`✅ Loaded ${info.rows.toLocaleString()} records`);
 
         // Send file to backend for MinIO persistence ONLY (non-blocking)
         datasetsApi.storeFileOnly(file)
           .then(res => {
             if (res.saved_to_storage) {
-              showToast(lang === 'ar' ? '☁️ تم حفظ الملف في التخزين السحابي' : '☁️ File saved to cloud storage');
+              showToast('☁️ File saved to cloud storage');
             }
           })
           .catch(err => console.error("Cloud save failed:", err));
@@ -160,19 +158,19 @@ function App() {
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const msg = errorMessage === 'exceeds 50MB'
-        ? (lang === 'ar' ? '❌ الملف كبير جداً (أقصى حد 50 ميجابايت)' : '❌ File too large (Max 50MB)')
-        : (lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file');
+        ? '❌ File too large (Max 50MB)'
+        : '❌ Could not read file';
       showToast(msg, 'err');
     } finally {
       setLoading(false);
       setProgress(0);
     }
-  }, [lang, setDataset]);
+  }, [setDataset]);
 
 
   const handleChatFile = useCallback(async (file: File) => {
     setLoading(true);
-    setLoadMsg(lang === 'ar' ? 'جاري إرفاق وتحليل الملف...' : 'Attaching and analyzing file...');
+    setLoadMsg('Attaching and analyzing file...');
     setProgress(0);
     try {
       if (file.size > 50 * 1024 * 1024) {
@@ -181,7 +179,7 @@ function App() {
 
       if (file.size > 10 * 1024 * 1024) {
         // Large file (> 10MB) -> Send to backend Celery worker
-        setLoadMsg(lang === 'ar' ? 'جاري إرفاق ومعالجة الملف في السيرفر...' : 'Attaching and processing on server...');
+        setLoadMsg('Attaching and processing on server...');
         const res = await datasetsApi.uploadLarge(file);
         
         const jobId = res.job_id;
@@ -193,7 +191,7 @@ function App() {
           
           if (statusRes.status === 'processing') {
             setProgress(statusRes.progress || 10);
-            setLoadMsg(statusRes.message || (lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'));
+            setLoadMsg(statusRes.message || 'Processing...');
           } else if (statusRes.status === 'done' || statusRes.status === 'success') {
             break;
           } else if (statusRes.status === 'error' || statusRes.status === 'failure') {
@@ -205,7 +203,7 @@ function App() {
         const info = convertBackendResultToDatasetInfo(statusRes as any);
         setDataset(info);
         setProgress(100);
-        showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بسرعة فائقة` : `✅ Attached ${info.rows.toLocaleString()} records ultra-fast`);
+        showToast(`✅ Attached ${info.rows.toLocaleString()} records ultra-fast`);
         
       } else {
         // Small file -> Parse in browser
@@ -215,28 +213,28 @@ function App() {
         const info = analyzeDataset(file, rows);
         setDataset(info);
         setProgress(100);
-        showToast(lang === 'ar' ? `✅ تم إرفاق ${info.rows.toLocaleString()} سجل بنجاح` : `✅ Attached ${info.rows.toLocaleString()} records`);
+        showToast(`✅ Attached ${info.rows.toLocaleString()} records`);
         
         datasetsApi.storeFileOnly(file).catch(err => console.error("Cloud save failed:", err));
       }
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       const msg = errorMessage === 'exceeds 50MB' 
-        ? (lang === 'ar' ? '❌ الملف كبير جداً (أقصى حد 50 ميجابايت)' : '❌ File too large (Max 50MB)')
-        : (lang === 'ar' ? '❌ تعذر قراءة الملف' : '❌ Could not read file');
+        ? '❌ File too large (Max 50MB)'
+        : '❌ Could not read file';
       showToast(msg, 'err');
     } finally { 
       setLoading(false); 
       setProgress(0);
     }
-  }, [lang, setDataset]);
+  }, [setDataset]);
 
   const handleClean = useCallback(() => {
     if (!dataset) return;
     const cleaned = cleanDataset(dataset);
     setDataset(cleaned);
-    showToast(lang === 'ar' ? '✅ تمت التنقية بنجاح!' : '✅ Data cleaned successfully!');
-  }, [dataset, lang, setDataset]);
+    showToast('✅ Data cleaned successfully!');
+  }, [dataset, setDataset]);
 
   const handleClose = () => { 
     setDataset(null); 
@@ -246,17 +244,16 @@ function App() {
   
   const handleClearSession = () => {
     handleClose();
-    showToast(lang === 'ar' ? '🗑️ تم مسح الجلسة بنجاح' : '🗑️ Session cleared successfully');
+    showToast('🗑️ Session cleared successfully');
   };
 
-  const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar');
-  
+    
 
-  // لا يوجد جدار تسجيل إجباري — التطبيق متاح للجميع
-  // زر تسجيل الدخول موجود في الشريط الجانبي ويفتح LoginPopup الصغيرة
+  // No forced login wall — app is available to everyone
+  // Login button is in the sidebar and opens the small LoginPopup
 
   return (
-    <div className={`app ${lang === 'en' ? 'ltr' : 'rtl'} flex flex-col min-h-screen relative`}>
+    <div className={`app ${'rtl'} flex flex-col min-h-screen relative`}>
       {/* Mobile Top Bar */}
       <div className="mobile-top-bar">
         <div className="mobile-logo-small">
@@ -280,10 +277,10 @@ function App() {
 
       <Sidebar 
         tab={tab} 
-        lang={lang} 
+        
         hasData={!!dataset} 
         onTab={(t) => { setTab(t); setMobileMenuOpen(false); }} 
-        onLang={toggleLang} 
+        
         onClose={handleClose} 
         onClearSession={handleClearSession}
         onOpenEditor={() => { setSidePanelOpen(true); setMobileMenuOpen(false); }} 
@@ -313,26 +310,26 @@ function App() {
         {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
 
         <div className="flex-1 animate-fade-in">
-          {tab === 'home' && <HomePage lang={lang} onFile={handleFile} />}
-          {tab === 'dashboard' && dataset && <DashboardPage lang={lang} />}
-          {tab === 'cleaning' && dataset && <CleaningPage info={dataset} lang={lang} onClean={handleClean} onUpdate={setDataset} />}
+          {tab === 'home' && <HomePage onFile={handleFile} />}
+          {tab === 'dashboard' && dataset && <DashboardPage />}
+          {tab === 'cleaning' && dataset && <CleaningPage info={dataset} onClean={handleClean} onUpdate={setDataset} />}
           {tab === 'chat' && <OpenRouterChat dataset={dataset} onFileUpload={handleChatFile} onUpdate={setDataset} />}
-          {tab === 'export' && dataset && <ExportPage info={dataset} lang={lang} />}
-          {tab === 'files' && <SavedFilesPage lang={lang} />}
-          {tab === 'about' && <AboutUsPage lang={lang} />}
-          {tab === 'privacy' && <PrivacyPage lang={lang} />}
-          {tab === 'faq' && <FAQPage lang={lang} />}
-          {tab === 'guide' && <GuidePage lang={lang} />}
-          {tab === 'compare' && <ComparisonPage lang={lang} />}
+          {tab === 'export' && dataset && <ExportPage info={dataset} />}
+          {tab === 'files' && <SavedFilesPage />}
+          {tab === 'about' && <AboutUsPage />}
+          {tab === 'privacy' && <PrivacyPage />}
+          {tab === 'faq' && <FAQPage />}
+          {tab === 'guide' && <GuidePage />}
+          {tab === 'compare' && <ComparisonPage />}
           {tab === 'smart-dashboard' && dataset && <SmartDashboardPage onBack={() => setTab('dashboard')} />}
         </div>
 
         {dataset && (
-          <EditorSidebar isOpen={sidePanelOpen} onClose={() => setSidePanelOpen(false)} info={dataset} lang={lang} onUpdate={setDataset} />
+          <EditorSidebar isOpen={sidePanelOpen} onClose={() => setSidePanelOpen(false)} info={dataset} onUpdate={setDataset} />
         )}
       </main>
 
-      {/* نافذة تسجيل الدخول المنبثقة الصغيرة */}
+      {/* Small Login Popup Window */}
       <LoginPopup
         isOpen={loginPopupOpen}
         onClose={() => setLoginPopupOpen(false)}

@@ -227,17 +227,17 @@ export const DataChart: React.FC<Props> = ({ chart, onFilterClick }) => {
           <span className="chart-card-title">{chart.title}</span>
           <div className="chart-hint-trigger">
             <Info size={12} className="muted-icon" />
-            <div className="chart-hint-popover">أسحب وأفلت على الرسم لعمل Zoom (تكبير)</div>
+            <div className="chart-hint-popover">Drag and zoom on the chart</div>
           </div>
         </div>
         <div className="chart-actions">
            <span className="chart-type-badge">{chart.type.toUpperCase()}</span>
            {chart.type !== 'pie' && (
-             <button className={`chart-download-btn ${forecast ? 'active' : ''}`} onClick={handleForecast} title={forecast ? 'إخفاء التوقع' : 'توقع المستقبّل'}>
+             <button className={`chart-download-btn ${forecast ? 'active' : ''}`} onClick={handleForecast} title={forecast ? 'Hide Forecast' : 'Forecast Future'}>
                <TrendingUp size={14} color={forecast ? '#f59e0b' : undefined} />
              </button>
            )}
-           <button className="chart-download-btn" onClick={(e) => { e.stopPropagation(); download(); }} title="تحميل كصورة">
+           <button className="chart-download-btn" onClick={(e) => { e.stopPropagation(); download(); }} title="Download as Image">
              <Camera size={14} />
            </button>
         </div>

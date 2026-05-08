@@ -1,21 +1,18 @@
 import React from 'react';
 import { Mail, Link, Heart } from 'lucide-react';
-import type { Lang } from '../types';
 
-interface Props {
-  lang: Lang;
-}
+interface Props {}
 
-export const CreatorFooter: React.FC<Props> = ({ lang }) => {
-  const isAr = lang === 'ar';
+export const CreatorFooter: React.FC<Props> = ({}) => {
+
   
   return (
-    <div className="creator-footer-premium" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="creator-footer-premium" dir="ltr">
       <div className="footer-line" />
       <div className="footer-content">
         <div className="footer-info">
           <p className="developed-by">
-            {isAr ? 'تم التطوير والبرمجة بواسطة' : 'Developed & Programmed by'}
+            'Developed & Programmed by'
             <span className="creator-name"> IBRAHIM SABREY</span>
           </p>
           <div className="footer-links">

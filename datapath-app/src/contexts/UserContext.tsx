@@ -32,18 +32,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // جلب كافة بيانات المستخدم من الكولكشنات المختلفة
+  // Fetch all user data from different collections
   const fetchUserData = async (uid: string, email: string) => {
     try {
       const data: UserData = {};
       
-      // جلب البيانات من users_profile
+      // Fetch data from users_profile
       const profileRef = doc(db, 'users_profile', uid);
       const profileSnap = await getDoc(profileRef);
       if (profileSnap.exists()) {
         data.profile = profileSnap.data();
       } else {
-        // إذا لم يكن موجوداً، يمكننا البحث بواسطة الإيميل أيضاً
+        // If not found, we can also search by email
         const q = query(collection(db, 'users_profile'), where('email', '==', email));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
@@ -51,12 +51,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // جلب البيانات من users_settings
+      // Fetch data from users_settings
       const settingsRef = doc(db, 'users_settings', uid);
       const settingsSnap = await getDoc(settingsRef);
       if (settingsSnap.exists()) data.settings = settingsSnap.data();
 
-      // جلب البيانات من users_activity
+      // Fetch data from users_activity
       const activityRef = doc(db, 'users_activity', uid);
       const activitySnap = await getDoc(activityRef);
       if (activitySnap.exists()) data.activity = activitySnap.data();
@@ -67,7 +67,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // مراقبة حالة تسجيل الدخول
+  // Monitor login state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -87,7 +87,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return unsubscribe;
   }, []);
 
-  // القاعدة الذهبية: التحقق الذكي عند التسجيل (Check-then-Login)
+  // Golden Rule: Smart Check during registration (Check-then-Login)
   const smartRegisterOrLogin = async (email: string, password: string) => {
     try {
       // 1. Try to sign in first
@@ -101,7 +101,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const newUser = userCredential.user;
           
-          // إنشاء ملفات مبدئية في الكولكشنات
+          // Create initial files in collections
           await setDoc(doc(db, 'users_profile', newUser.uid), {
             email: newUser.email,
             createdAt: new Date().toISOString()

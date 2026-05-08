@@ -7,7 +7,7 @@ import {
   Activity, AlertTriangle, TrendingUp, TrendingDown,
   Minus, GitBranch, Wand2, BookOpen, Plug, X, Filter,
 } from 'lucide-react';
-import type { Lang, ChartInfo } from '../types';
+import type { ChartInfo } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DataGrid } from '../components/Analysis/DataGrid';
 import { TransformationTimeline } from '../components/Analysis/TransformationTimeline';
@@ -23,21 +23,11 @@ import { convertBackendResultToDatasetInfo, type BackendResult } from '../lib/da
 import { generateAInarrative } from '../lib/narrativeEngine';
 import { generateExecutiveReport } from '../lib/report-gen';
 
-interface Props { lang: Lang; }
+interface Props {}
 
 const T = {
-  ar: {
-    title: 'منصة التحليل المتقدمة',
-    healthTitle: 'مؤشر صحة البيانات',
-    insights: 'رؤى الذكاء الاصطناعي',
-    builder: 'صانع المخططات',
-    records: 'سجل',
-    columns: 'عمود',
-    outliers: 'كشف القيم الشاذة',
-    correlation: 'مصفوفة الارتباط',
-    growth: 'مؤشرات النمو',
-  },
-  en: {
+
+
     title: 'Advanced Analyst Suite',
     healthTitle: 'Data Health Score',
     insights: 'AI Narrative Insights',
@@ -47,7 +37,6 @@ const T = {
     outliers: 'Anomaly Detection',
     correlation: 'Correlation Matrix',
     growth: 'Growth Indicators',
-  },
 };
 
 // ===== LIVE DASHBOARD SECTION — NEW =====
@@ -180,7 +169,7 @@ const GrowthBadge: React.FC<{ pct: number; trend: 'up' | 'down' | 'flat' }> = ({
   );
 };
 
-export const DashboardPage: React.FC<Props> = ({ lang }) => {
+export const DashboardPage: React.FC<Props> = ({}) => {
   const {
     info, rollback, setDataset,
     crossFilters, crossFilteredData, isCrossFiltered,
@@ -202,7 +191,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
   const [showSourceManager, setShowSourceManager] = useState(false);
 
   const health = getHealthStats();
-  const t = T[lang];
+  const t = T;
 
   // ── insights must be memoized so it doesn't change every render ──────────
   const insights = useMemo(
@@ -249,7 +238,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
       const nonNull = values.filter(v => v !== null && v !== undefined && v !== '');
       const isNumeric = nonNull.length > 0 && nonNull.every(v => !isNaN(Number(v)));
       const isDate = !isNumeric && nonNull.some(v => !isNaN(Date.parse(String(v))));
-      const type = isNumeric ? 'رقمي' : isDate ? 'تاريخ' : 'نصي';
+      const type = isNumeric ? 'Numeric' : isDate ? 'Date' : 'Text';
       const typeColor = isNumeric ? '#3b82f6' : isDate ? '#8b5cf6' : '#10b981';
       const colHealth = totalRows > 0 ? Math.round(((totalRows - missing) / totalRows) * 100) : 0;
       const healthColor = colHealth >= 80 ? '#10b981' : colHealth >= 50 ? '#f59e0b' : '#ef4444';
@@ -314,12 +303,33 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
   const handleExecutiveReport = useCallback(async () => {
     if (!info) return;
     setReportGenerating(true);
-    await generateExecutiveReport(info, health, {
-      title: `${info.filename} — Executive Report`,
-      subtitle: 'Kimit AI Studio — Advanced Analytics',
-      author: 'Kimit AI System',
-      insights: insights.map(ins => ({ title: ins.title, description: ins.description, type: ins.type })),
-    });
+    try {
+      const { datasetsApi } = await import('../api/datasets.api');
+      let aiSummary = '';
+      try {
+        const prompt = `As a Senior Data Strategy Consultant, analyze this dataset summary: 
+Filename: ${info.filename}
+Rows: ${info.rows}, Columns: ${info.columns.length}
+Missing Values: ${info.totalNulls}, Duplicates: ${info.duplicates}
+
+Write a concise, highly professional executive narrative (about 150-200 words) summarizing the strategic value of this data, potential risks (if missing data/duplicates exist), and the top 3 recommended next steps for management. Use bold text (**like this**) for key terms.`;
+        
+        const res = await datasetsApi.chat(info.datasetId!, prompt, 'en', `report_${Date.now()}`);
+        aiSummary = res.answer;
+      } catch (err) {
+        console.warn('AI narrative generation failed, proceeding without it', err);
+      }
+
+      await generateExecutiveReport(info, health, {
+        title: `${info.filename} — Executive Report`,
+        subtitle: 'Kimit AI Studio — Advanced Analytics',
+        author: 'Kimit AI System',
+        aiSummary: aiSummary, // <== Pass the dynamic AI text here
+        insights: insights.map(ins => ({ title: ins.title, description: ins.description, type: ins.type })),
+      });
+    } catch (error) {
+      console.error("Report generation failed:", error);
+    }
     setReportGenerating(false);
   }, [info, health, insights]);
 
@@ -372,9 +382,9 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
             <line x1="12" y1="12" x2="12" y2="21"/>
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
           </svg>
-          <h3 style={{ color: '#f8fafc', margin: '16px 0 8px', fontSize: 20 }}>ارفع ملف البيانات للبدء</h3>
+          <h3 style={{ color: '#f8fafc', margin: '16px 0 8px', fontSize: 20 }}>Upload a data file to start</h3>
           <p style={{ color: '#94a3b8', textAlign: 'center', maxWidth: 400, fontSize: 14 }}>
-            يدعم النظام ملفات CSV و Excel بأي حجم. سيتم تحليل بياناتك فوراً.
+            The system supports CSV and Excel files of any size. Your data will be analyzed instantly.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 24, width: '100%', maxWidth: 500 }}>
             {[0,1,2].map(i => (
@@ -518,7 +528,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
           </button>
           <button className="premium-button" onClick={handleFullPDF} disabled={exporting}>
             {exporting ? <Loader2 className="spin" size={16} /> : <FileText size={16} />}
-            {lang === 'ar' ? 'تصدير PDF' : 'Branded PDF'}
+            {'Branded PDF'}
           </button>
           {/* AI Executive Report (Task 1) */}
           <button
@@ -544,7 +554,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
             marginBottom: 16,
           }} className="live-kpi-grid">
             <KpiCard
-              label="إجمالي الصفوف / Total Rows"
+              label="Total Rows"
               value={totalRows}
               borderColor="#10b981"
               delay={0}
@@ -557,7 +567,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
               }
             />
             <KpiCard
-              label="إجمالي الأعمدة / Total Columns"
+              label="Total Columns"
               value={totalCols}
               borderColor="#3b82f6"
               delay={100}
@@ -570,7 +580,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
               }
             />
             <KpiCard
-              label="قيم مفقودة / Missing Values"
+              label="Missing Values"
               value={totalMissing}
               borderColor="#f59e0b"
               delay={200}
@@ -583,7 +593,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
               }
             />
             <KpiCard
-              label="مكررات / Duplicates"
+              label="Duplicates"
               value={totalDuplicates}
               borderColor="#ef4444"
               delay={300}
@@ -614,7 +624,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
               flexDirection: 'column',
               alignItems: 'center',
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 16 }}>جودة البيانات / Data Quality</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 16 }}>Data Quality</div>
               <svg width="140" height="140" viewBox="0 0 140 140">
                 <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
                 <circle
@@ -632,9 +642,9 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
                 <text x="70" y="85" textAnchor="middle" fill="#94a3b8" fontSize="13">%</text>
               </svg>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16, width: '100%' }}>
-                <StatusLine color="#10b981" label={`بيانات محللة: ${totalRows.toLocaleString()} صف`} />
-                <StatusLine color="#f59e0b" label={`مشاكل مكتشفة: ${totalMissing + totalDuplicates}`} />
-                <StatusLine color="#3b82f6" label={`قابل للإصلاح: ${totalMissing + totalDuplicates > 0 ? 'نعم ✓' : 'لا يوجد'}`} />
+                <StatusLine color="#10b981" label={`Analyzed data: ${totalRows.toLocaleString()} rows`} />
+                <StatusLine color="#f59e0b" label={`Issues detected: ${totalMissing + totalDuplicates}`} />
+                <StatusLine color="#3b82f6" label={`Fixable: ${totalMissing + totalDuplicates > 0 ? 'Yes ✓' : 'None'}`} />
               </div>
             </div>
 
@@ -647,15 +657,15 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
               padding: '20px',
               overflow: 'hidden',
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 12 }}>صحة الأعمدة / Column Health</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 12 }}>Column Health</div>
               <div style={{ maxHeight: 280, overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ color: '#64748b', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600 }}>اسم العمود</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 600 }}>النوع</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 600 }}>مفقود</th>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600 }}>صحة البيانات</th>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600 }}>Column Name</th>
+                      <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 600 }}>Type</th>
+                      <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 600 }}>Missing</th>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600 }}>Data Health</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -700,25 +710,25 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
           }}>
             {([
               {
-                label: 'تنقية البيانات / Clean',
+                label: 'Clean',
                 color: '#10b981',
                 icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>,
                 onClick: () => window.dispatchEvent(new CustomEvent('kimit:navigate', { detail: 'cleaning' })),
               },
               {
-                label: 'محادثة AI / Chat',
+                label: 'Chat',
                 color: '#3b82f6',
                 icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
                 onClick: () => window.dispatchEvent(new CustomEvent('kimit:navigate', { detail: 'chat' })),
               },
               {
-                label: 'تصدير Excel / Export',
+                label: 'Export',
                 color: '#10b981',
                 icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
                 onClick: () => { if (info) { exportToExcel(info.workData, `Kimit_Data_${info.filename}.xlsx`); } },
               },
               {
-                label: 'رفع ملف جديد / New File',
+                label: 'New File',
                 color: '#f59e0b',
                 icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.89"/></svg>,
                 onClick: () => { setDataset(null); window.dispatchEvent(new CustomEvent('kimit:navigate', { detail: 'home' })); },
@@ -1010,7 +1020,7 @@ export const DashboardPage: React.FC<Props> = ({ lang }) => {
         </div>
       </div>
 
-      <CreatorFooter lang={lang} />
+      <CreatorFooter />
 
       <style>{`
         @keyframes slideUpFade {

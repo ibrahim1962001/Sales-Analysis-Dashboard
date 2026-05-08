@@ -644,8 +644,8 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>
         <LayoutDashboard size={48} color="#334155" />
-        <p style={{ color: '#64748b', fontSize: 14 }}>ارفع ملف بيانات أولاً للعرض هنا</p>
-        <button onClick={onBack} style={{ padding: '10px 20px', background: '#10b981', color: '#000', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700 }}>← رجوع</button>
+        <p style={{ color: '#64748b', fontSize: 14 }}>Upload a data file first to view the dashboard here</p>
+        <button onClick={onBack} style={{ padding: '10px 20px', background: '#10b981', color: '#000', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700 }}>← Back</button>
       </div>
     );
   }

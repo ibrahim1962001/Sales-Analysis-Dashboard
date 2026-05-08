@@ -4,5 +4,8 @@
   "venv": ".venv",
   "pythonPlatform": "Windows",
   "typeCheckingMode": "basic",
-  "reportMissingModuleSource": "none"
+  "reportMissingModuleSource": "none",
+  "extraPaths": [
+    "d:/data anyles proooo/backend"
+  ]
 }

@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import type { Lang } from '../types';
 
 interface SavedFile {
   object_name: string;
@@ -10,24 +9,9 @@ interface SavedFile {
   download_url: string;
 }
 
-interface Props {
-  lang: Lang;
-}
+interface Props {}
 
 const T = {
-  ar: {
-    title: 'الملفات المحفوظة',
-    subtitle: 'ملفاتك المرفوعة في التخزين السحابي',
-    refresh: 'تحديث',
-    download: 'تحميل',
-    empty_title: 'لا توجد ملفات بعد',
-    empty_sub: 'ارفع ملفاً من الصفحة الرئيسية وسيظهر هنا تلقائياً',
-    loading: 'جاري تحميل الملفات...',
-    error: 'تعذر الاتصال بالتخزين السحابي',
-    size: 'الحجم',
-    date: 'تاريخ الرفع',
-    name: 'اسم الملف',
-  },
   en: {
     title: 'Saved Files',
     subtitle: 'Your uploaded files in cloud storage',
@@ -82,9 +66,9 @@ function truncate(str: string, max = 42) {
   return str.length > max ? str.slice(0, max - 3) + '...' : str;
 }
 
-export const SavedFilesPage: React.FC<Props> = ({ lang }) => {
-  const t = T[lang];
-  const isAr = lang === 'ar';
+export const SavedFilesPage: React.FC<Props> = ({ }) => {
+  const t = T.en;
+
 
   const [files, setFiles] = useState<SavedFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +101,7 @@ export const SavedFilesPage: React.FC<Props> = ({ lang }) => {
   };
 
   return (
-    <div className="page-container" style={{ padding: '32px 28px', direction: isAr ? 'rtl' : 'ltr' }}>
+    <div className="page-container" style={{ padding: '32px 28px', direction: 'ltr' }}>
       {/* Header */}
       <div className="saved-files-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
@@ -208,7 +192,7 @@ export const SavedFilesPage: React.FC<Props> = ({ lang }) => {
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
                   {[t.name, t.size, t.date, ''].map((h, i) => (
                     <th key={i} style={{
-                      padding: '13px 20px', textAlign: isAr ? (i === 3 ? 'left' : 'right') : (i === 3 ? 'right' : 'left'),
+                      padding: '13px 20px', textAlign: i === 3 ? 'right' : 'left',
                       color: '#94a3b8', fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em',
                     }}>{h}</th>
                   ))}
@@ -241,7 +225,7 @@ export const SavedFilesPage: React.FC<Props> = ({ lang }) => {
                       {file.last_modified}
                     </td>
                     {/* Download */}
-                    <td style={{ padding: '14px 20px', textAlign: isAr ? 'left' : 'right' }}>
+                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                       <button
                         onClick={() => handleDownload(file.object_name, file.filename)}
                         style={{

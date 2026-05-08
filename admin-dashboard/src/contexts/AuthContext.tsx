@@ -2,22 +2,51 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
+export type AdminRole = 'super_admin' | 'sub_admin';
+
+interface AdminInfo {
+  role: AdminRole;
+  canApproveCharges: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  adminInfo: AdminInfo | null;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Super admin UIDs — comma-separated in env
+const SUPER_ADMIN_UIDS = (import.meta.env.VITE_SUPER_ADMIN_UID as string || '')
+  .split(',')
+  .map((s: string) => s.trim())
+  .filter(Boolean);
+
+function resolveAdminInfo(uid: string): AdminInfo | null {
+  if (SUPER_ADMIN_UIDS.includes(uid)) {
+    return { role: 'super_admin', canApproveCharges: true };
+  }
+  return null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
+      if (u) {
+        setAdminInfo(resolveAdminInfo(u.uid));
+      } else {
+        setAdminInfo(null);
+      }
       setLoading(false);
     });
     return unsub;
@@ -28,11 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    setAdminInfo(null);
     await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      adminInfo,
+      isAdmin: adminInfo !== null,
+      isSuperAdmin: adminInfo?.role === 'super_admin',
+      login,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -21,12 +21,12 @@ const SCOPES = [
 
 interface Props {
   onFile: (file: File) => void;
-  lang?: 'ar' | 'en';
+  
 }
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
-export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => {
+export const GoogleSheetsPicker: React.FC<Props> = ({ onFile }) => {
   const [status, setStatus]     = useState<Status>('idle');
   const [msg, setMsg]           = useState('');
   const [gapiReady, setGapiReady] = useState(false);
@@ -67,7 +67,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
               openPicker(resp.access_token);
             } else {
               setStatus('error');
-              setMsg(lang === 'ar' ? 'فشل في تسجيل الدخول' : 'Login failed');
+              setMsg('Login failed');
             }
           },
         });
@@ -85,7 +85,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
   const fetchSheet = useCallback(async (doc: { id: string; name: string }, token: string) => {
     setStatus('loading');
     const name = doc.name;
-    setMsg(lang === 'ar' ? `جاري تحميل "${name}"…` : `Loading "${name}"…`);
+    setMsg(`Loading "${name}"…`);
 
     try {
       const url = `https://docs.google.com/spreadsheets/d/${doc.id}/export?format=csv&gid=0`;
@@ -104,7 +104,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
           if (!csv.trim()) throw new Error('empty');
           onFile(new File([csv], `${name}.csv`, { type: 'text/csv' }));
           setStatus('success');
-          setMsg(lang === 'ar' ? `✅ تم تحميل "${name}" بنجاح!` : `✅ "${name}" loaded!`);
+          setMsg(`✅ "${name}" loaded!`);
           setTimeout(() => { setStatus('idle'); setMsg(''); }, 1400);
           return;
         }
@@ -115,7 +115,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
       if (!text.trim()) throw new Error('empty response');
 
       setStatus('success');
-      setMsg(lang === 'ar' ? `✅ تم تحميل "${name}" بنجاح!` : `✅ "${name}" loaded!`);
+      setMsg(`✅ "${name}" loaded!`);
       setTimeout(() => {
         setStatus('idle');
         setMsg('');
@@ -125,19 +125,15 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
     } catch (e: unknown) {
       console.error('Sheet fetch error:', e);
       setStatus('error');
-      setMsg(
-        lang === 'ar'
-          ? 'تعذّر قراءة الملف. تأكد أن الملف مشارَك أو أعد المصادقة.'
-          : 'Could not read file. Check sharing permissions or re-authenticate.'
-      );
+      setMsg('Could not read file. Check sharing permissions or re-authenticate.');
     }
-  }, [lang, onFile]);
+  }, [onFile]);
 
   /* ── open Picker ─────────────────────────────────────── */
   const openPicker = useCallback((token: string) => {
     if (!window.google?.picker) {
       setStatus('error');
-      setMsg(lang === 'ar' ? 'Google Picker لم يتحمل. أعد المحاولة.' : 'Google Picker not loaded. Retry.');
+      setMsg('Google Picker not loaded. Retry.');
       return;
     }
 
@@ -159,7 +155,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
       .setDeveloperKey(GOOGLE_API_KEY)
       .addView(sheetsView)
       .addView(sharedView)
-      .setTitle(lang === 'ar' ? '📊 اختر جدول Google Sheets' : '📊 Select a Google Sheet')
+      .setTitle('📊 Select a Google Sheet')
       .setCallback((data: any) => {
         if (data.action === window.google.picker.Action.PICKED && data.docs?.[0]) {
           fetchSheet(data.docs[0], token);
@@ -171,18 +167,18 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
       .build();
 
     picker.setVisible(true);
-  }, [lang, fetchSheet]);
+  }, [fetchSheet]);
 
   /* ── button click ────────────────────────────────────── */
   const handleClick = () => {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
       setStatus('error');
-      setMsg(lang === 'ar' ? 'مفاتيح Google غير مُعدَّة' : 'Google API keys missing');
+      setMsg('Google API keys missing');
       return;
     }
     if (!gapiReady || !gisReady) {
       setStatus('loading');
-      setMsg(lang === 'ar' ? 'جاري تحميل خدمات Google…' : 'Loading Google services…');
+      setMsg('Loading Google services…');
       // retry after a second
       setTimeout(handleClick, 1000);
       return;
@@ -193,7 +189,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
       openPicker(tokenRef.current);
     } else {
       setStatus('loading');
-      setMsg(lang === 'ar' ? 'جاري تسجيل الدخول بـ Google…' : 'Signing in with Google…');
+      setMsg('Signing in with Google…');
       // prompt: '' tries silent auth first; '' = consent if needed
       clientRef.current?.requestAccessToken({ prompt: '' });
     }
@@ -205,7 +201,7 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
         className={`gsp-btn ${status}`}
         onClick={handleClick}
         disabled={status === 'loading' || status === 'success'}
-        title={lang === 'ar' ? 'اختر جدول من Google Drive' : 'Pick a spreadsheet from Google Drive'}
+        title="Pick a spreadsheet from Google Drive"
       >
         {status === 'loading'  ? <Loader2 size={18} className="gsp-spin" />  :
          status === 'success'  ? <CheckCircle2 size={18} />                   :
@@ -213,8 +209,8 @@ export const GoogleSheetsPicker: React.FC<Props> = ({ onFile, lang = 'ar' }) => 
                                  <Sheet size={18} />}
         <span>
           {status === 'loading' && !msg
-            ? (lang === 'ar' ? 'جاري التحميل…' : 'Loading…')
-            : lang === 'ar' ? 'تحميل من Google Sheets' : 'Load from Google Sheets'}
+            ? 'Loading…'
+            : 'Load from Google Sheets'}
         </span>
       </button>
 

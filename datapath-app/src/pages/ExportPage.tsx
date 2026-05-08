@@ -1,19 +1,12 @@
 import React from 'react';
 import { FileText, Code, FileSpreadsheet, ArrowDownCircle } from 'lucide-react';
-import type { DatasetInfo, Lang } from '../types';
+import type { DatasetInfo } from '../types';
 import { exportCSV, exportJSON } from '../lib/dataUtils';
 import * as XLSX from 'xlsx';
 
-interface Props { info: DatasetInfo; lang: Lang; }
+interface Props { info: DatasetInfo;  }
 
 const T = {
-  ar: {
-    title: 'تصدير البيانات', sub: 'حمّل نسخة منقحة من بياناتك',
-    csvTitle: 'تصدير CSV', csvDesc: 'ملف نصي مفصول بفواصل، متوافق مع Excel وكل البرامج',
-    jsonTitle: 'تصدير JSON', jsonDesc: 'تنسيق مثالي للمطورين والتطبيقات البرمجية',
-    xlsxTitle: 'تصدير Excel', xlsxDesc: 'ملف إكسيل حديث (.xlsx) مباشر مع الحفاظ على التنسيق',
-    rows: 'سجل جاهز للتصدير', noData: 'لا توجد بيانات'
-  },
   en: {
     title: 'Export Data', sub: 'Download a clean version of your data',
     csvTitle: 'Export CSV', csvDesc: 'Comma-separated file, compatible with Excel and all tools',
@@ -23,8 +16,8 @@ const T = {
   }
 };
 
-export const ExportPage: React.FC<Props> = ({ info, lang }) => {
-  const t = T[lang];
+export const ExportPage: React.FC<Props> = ({ info, }) => {
+  const t = T.en;
   return (
     <div className="page">
       <div className="page-header">

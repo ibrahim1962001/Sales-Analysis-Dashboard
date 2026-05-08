@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Mic, MicOff, Plus, X } from 'lucide-react';
 import { askAI } from '../lib/aiService';
-import type { ChatMessage, DatasetInfo, Lang } from '../types';
+import type { ChatMessage, DatasetInfo } from '../types';
+
 
 const T = {
   ar: {
-    placeholder: 'اسأل عن أي شيء في بياناتك...',
-    send: 'إرسال',
-    thinking: 'جاري التفكير...',
-    apply: 'تنفيذ اقتراح الـ AI',
-    applied: 'تم تنفيذ التعديل بنجاح!',
-    noKey: 'يرجى إدخال مفتاح Groq API للبدء في المحادثة.',
-    newChat: 'محادثة',
-    blankChat: 'محادثة فارغة'
+    placeholder: 'Ask anything about your data...',
+    send: 'Send',
+    thinking: 'Thinking...',
+    apply: 'Apply AI suggestion',
+    applied: 'Edit applied successfully!',
+    noKey: 'Please enter Groq API key to start chat.',
+    newChat: 'Chat',
+    blankChat: 'Empty Chat'
   },
   en: {
     placeholder: 'Ask anything about your data...',
@@ -27,7 +28,7 @@ const T = {
 };
 
 interface Props {
-  lang: Lang;
+  
   dataset: DatasetInfo | null;
   apiKey: string;
   onApplyAction: (action: string) => void;
@@ -40,8 +41,8 @@ interface ChatSession {
   messages: ChatMessage[];
 }
 
-export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyAction }) => {
-  const t = T[lang];
+export const ChatPanel: React.FC<Props> = ({ dataset, apiKey, onApplyAction }) => {
+  const t = T.en;
 
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     const savedSessions = localStorage.getItem('datapath_chat_sessions');
@@ -56,7 +57,7 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
     const oldSaved = localStorage.getItem('datapath_chat_history');
     if (oldSaved) {
        const oldMsg = JSON.parse(oldSaved).map((m: Record<string, unknown>) => ({ ...m, timestamp: new Date(m.timestamp as string) }));
-       if (oldMsg.length > 0) return [{ id: Date.now().toString(), title: 'محادثة سابقة', filename: '', messages: oldMsg as ChatMessage[] }];
+       if (oldMsg.length > 0) return [{ id: Date.now().toString(), title: 'Previous Chat', filename: '', messages: oldMsg as ChatMessage[] }];
     }
     return [];
   });
@@ -118,11 +119,11 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
     // @ts-expect-error window globals
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert(lang === 'ar' ? 'عذراً، متصفحك لا يدعم خاصية الصوت' : 'Speech recognition not supported in this browser');
+      alert('Speech recognition not supported in this browser');
       return;
     }
     const recognition = new SpeechRecognition();
-    recognition.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
+    recognition.lang = 'en-US';
     recognition.interimResults = false;
     
     recognition.onstart = () => setIsListening(true);
@@ -150,12 +151,10 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
         question: text,
         history: messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
         apiKey,
-        dataset,
-        lang
-      });
+        dataset});
 
       let action: string | undefined;
-      if (text.toLowerCase().includes('duplicate') || text.includes('تكرار')) action = 'clean';
+      if (text.toLowerCase().includes('duplicate') ) action = 'clean';
       
       setMessages(prev => [...prev, { role: 'assistant', content: res, timestamp: new Date(), action }]);
     } catch (err: unknown) {
@@ -170,7 +169,7 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
     onApplyAction(action);
     setMessages(prev => [...prev, {
       role: 'assistant',
-      content: lang === 'ar' ? '✅ اكتمل! قمت بتنفيذ طلبك وتحديث البيانات بنجاح.' : '✅ Done! I have applied your request and updated the data successfully.',
+      content: '✅ Done! I have applied your request and updated the data successfully.',
       timestamp: new Date()
     }]);
   };
@@ -184,7 +183,7 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
             setSessions(prev => [{ id: newId, title: `${t.newChat} ${prev.length + 1}`, filename: dataset?.filename || '', messages: [] }, ...prev]);
             setActiveId(newId);
         }} style={{ padding: '6px 12px', fontSize: 13, background: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          <Plus size={14} /> {lang === 'ar' ? 'جديدة' : 'New'}
+          <Plus size={14} /> 'New'
         </button>
         {sessions.map(s => (
           <div key={s.id} onClick={() => setActiveId(s.id)} 
@@ -209,7 +208,7 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
                   {t.apply}
                 </button>
               )}
-              <span className="msg-time">{m.timestamp.toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="msg-time">{m.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
         ))}
@@ -225,11 +224,11 @@ export const ChatPanel: React.FC<Props> = ({ lang, dataset, apiKey, onApplyActio
       </div>
 
       <div className="chat-form">
-        <button className={`chat-mic-btn ${isListening ? 'listening' : ''}`} onClick={startListening} title="التحدث بالصوت">
+        <button className={`chat-mic-btn ${isListening ? 'listening' : ''}`} onClick={startListening} title="Speak">
           {isListening ? <MicOff size={20} color="#ef4444" /> : <Mic size={20} />}
         </button>
         <input 
-          className="chat-input" placeholder={isListening ? 'جاري الاستماع...' : t.placeholder} value={input}
+          className="chat-input" placeholder={isListening ? 'Listening...' : t.placeholder} value={input}
           onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()}
         />
         <button className="chat-send-btn" onClick={() => handleSend()} disabled={loading}>

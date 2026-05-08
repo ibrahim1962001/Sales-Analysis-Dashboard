@@ -60,7 +60,7 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
   }, [lazyLoad, isVisible, rootMargin]);
 
 
-  // تأكدنا من إن الحاوية مش بتغطي على الكود و الإعلان واخد حريته
+  // Ensure the container doesn't block the code and ad has space
   return (
     <div
       ref={wrapperRef}
@@ -74,7 +74,7 @@ export const AdSpace: React.FC<AdSpaceProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 50 // تأكيد عدم التغطية
+        zIndex: 50 // Ensure no overlap
       }}
     >
       {isVisible ? (

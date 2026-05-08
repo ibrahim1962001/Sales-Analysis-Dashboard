@@ -2,9 +2,9 @@ import { doc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 
 /**
- * دالة لتحليل ملف Markdown وتوزيع بياناته على مجموعات Firestore
- * تعتمد على العناوين (Headings) من المستوى الثاني `##` كاسم للكولكشن
- * والمستوى الثالث `###` كمعرف للمستند (Document ID) أو يتم إنشاء معرف تلقائي
+ * Function to parse a Markdown file and distribute its data to Firestore collections
+ * Relies on Level 2 Headings `##` for Collection Name
+ * and Level 3 `###` for Document ID or an auto ID is generated
  */
 export const migrateMarkdownToFirestore = async (markdownText: string) => {
   try {
@@ -17,7 +17,7 @@ export const migrateMarkdownToFirestore = async (markdownText: string) => {
     const batch = writeBatch(db);
     let hasOperations = false;
 
-    // دالة مساعدة لإضافة المستند الحالي إلى الـ Batch
+    // Helper function to add current document to Batch
     const commitCurrentDoc = () => {
       if (currentCollection && Object.keys(currentData).length > 0) {
         const docRef = doc(db, currentCollection, currentDocId);
@@ -30,24 +30,24 @@ export const migrateMarkdownToFirestore = async (markdownText: string) => {
       line = line.trim();
       if (!line) continue;
 
-      // التعرف على اسم الكولكشن (مثال: ## users_profile)
+      // Detect Collection Name (e.g., ## users_profile)
       if (line.startsWith('## ')) {
-        commitCurrentDoc(); // حفظ البيانات السابقة
+        commitCurrentDoc(); // Save previous data
         currentCollection = line.replace('##', '').trim();
         currentDocId = 'default_doc';
         currentData = {};
         currentKey = 'content';
       } 
-      // التعرف على اسم المستند (مثال: ### user_123 أو إيميل)
+      // Detect Document ID (e.g., ### user_123 or email)
       else if (line.startsWith('### ')) {
-        commitCurrentDoc(); // حفظ البيانات السابقة لنفس الكولكشن
+        commitCurrentDoc(); // Save previous data for same collection
         currentDocId = line.replace('###', '').trim();
         currentData = {};
         currentKey = 'content';
       }
-      // التعرف على المفاتيح والقيم (مثال: - name: Ahmed أو name: Ahmed)
+      // Detect Keys and Values (e.g., - name: Ahmed or name: Ahmed)
       else if (line.includes(':')) {
-        // إزالة علامة القائمة إذا وجدت
+        // Remove list mark if exists
         const cleanLine = line.startsWith('- ') ? line.slice(2) : line;
         const [key, ...valueParts] = cleanLine.split(':');
         if (key && valueParts.length > 0) {
@@ -55,7 +55,7 @@ export const migrateMarkdownToFirestore = async (markdownText: string) => {
           currentData[key.trim()] = value;
         }
       } 
-      // نصوص عادية
+      // Plain texts
       else {
         if (!currentData[currentKey]) {
           currentData[currentKey] = line;
@@ -65,14 +65,14 @@ export const migrateMarkdownToFirestore = async (markdownText: string) => {
       }
     }
 
-    // حفظ آخر مستند
+    // Save last document
     commitCurrentDoc();
 
     if (hasOperations) {
       await batch.commit();
-      console.log('✅ تم توزيع بيانات Markdown على Firestore بنجاح!');
+      console.log('✅ Markdown data distributed to Firestore successfully!');
     }
   } catch (error) {
-    console.error('❌ خطأ أثناء توزيع بيانات Markdown:', error);
+    console.error('❌ Error distributing Markdown data:', error);
   }
 };

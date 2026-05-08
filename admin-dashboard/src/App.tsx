@@ -14,13 +14,21 @@ import { ToastProvider } from './components/Toast';
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
 function ProtectedLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   if (loading) return (
     <div className="loading-spinner" style={{ minHeight: '100vh' }}>
       <div className="spinner" />
     </div>
   );
   if (!user) return <Navigate to="/login" replace />;
+  if (!isAdmin) return (
+    <div className="loading-spinner" style={{ minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
+      <div style={{ fontSize: 48 }}>🚫</div>
+      <div style={{ color: '#ff4d6d', fontWeight: 700, fontSize: 18 }}>Access Denied</div>
+      <div style={{ color: '#64748b', fontSize: 14 }}>Your account is not authorized as an admin.</div>
+      <button className="btn btn-ghost btn-sm" onClick={() => { import('./lib/firebase').then(m => { import('firebase/auth').then(fa => fa.signOut(m.auth)); }); }}>Sign Out</button>
+    </div>
+  );
   return (
     <div className="admin-layout">
       <Sidebar />

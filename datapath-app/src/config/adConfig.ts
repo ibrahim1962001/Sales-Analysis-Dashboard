@@ -1,11 +1,11 @@
 import type { AdProvider } from '../components/AdSpace';
 
 /**
- * إعدادات الإعلانات - يمكن تعديلها بسهولة
- * Weight: نسبة الظهور (كلما زادت زادت فرصة الظهور)
- * Enabled: تفعيل/تعطيل الإعلان
+ * Ad Settings - Can be easily modified
+ * Weight: Appearance probability
+ * Enabled: Enable/Disable Ad
  */
-// كود الإعلان الصحيح - يستخدم في جميع البانرات
+// Valid Ad Code - Used in all banners
 const WORKING_AD_CODE = `<script async="async" data-cfasync="false" src="https://pl29178744.profitablecpmratenetwork.com/800d5e90b5b2e1db5b501b1508428e31/invoke.js"></script>
 <div id="container-800d5e90b5b2e1db5b501b1508428e31"></div>`;
 
@@ -34,7 +34,7 @@ export const AD_PROVIDERS: AdProvider[] = [
 ];
 
 /**
- * إعلانات احتياطية (fallback) في حالة فشل الإعلان الرئيسي
+ * Fallback Ads in case main ad fails
  */
 export const FALLBACK_AD_PROVIDERS: AdProvider[] = [
   {
@@ -45,42 +45,42 @@ export const FALLBACK_AD_PROVIDERS: AdProvider[] = [
   <small>Advertisement</small>
 </div>`,
     weight: 5,
-    enabled: false // متوقف حالياً
+    enabled: false // Currently disabled
   }
 ];
 
 /**
- * الحصول على قائمة الإعلانات النشطة
+ * Get active ads list
  */
 export const getActiveAdProviders = (): AdProvider[] => {
   return AD_PROVIDERS.filter(provider => provider.enabled);
 };
 
 /**
- * الحصول على إعلان محدد حسب المعرف
+ * Get specific ad by ID
  */
 export const getAdProviderById = (id: string): AdProvider | undefined => {
   return AD_PROVIDERS.find(provider => provider.id === id);
 };
 
 /**
- * تحديد ما إذا كان يجب عرض إعلان بناءً على نوع الشاشة
- * @param adType نوع الإعلان
- * @param breakpoint نقطة التحقق (شاشة)
+ * Determine if ad should be displayed based on screen type
+ * @param adType Ad type
+ * @param breakpoint Breakpoint (screen)
  */
 export const shouldShowAd = (adType: string, breakpoint: 'mobile' | 'tablet' | 'desktop'): boolean => {
   switch (adType) {
     case 'horizontal':
-      // الإعلان الأفقي يظهر فقط على الشاشات الكبيرة
+      // Horizontal ad only appears on large screens
       return breakpoint === 'desktop';
     case 'vertical':
-      // الإعلان العمودي يظهر على كل الشاشات
+      // Vertical ad appears on all screens
       return true;
     case 'square':
-      // الإعلان المربع يظهر على كل الشاشات
+      // Square ad appears on all screens
       return true;
     case 'responsive':
-      // الإعلان المتجاوب يظهر على كل الشاشات
+      // Responsive ad appears on all screens
       return true;
     default:
       return true;
@@ -88,14 +88,14 @@ export const shouldShowAd = (adType: string, breakpoint: 'mobile' | 'tablet' | '
 };
 
 /**
- * الحصول على حجم الإعلان المناسب حسب نوع الشاشة
+ * Get appropriate ad size based on screen type
  */
 export const getAdDimensions = (adType: string, breakpoint: string): { width: number; height: number } => {
   const isMobile = breakpoint === 'mobile';
 
   switch (adType) {
     case 'horizontal':
-      // على الموبايل: إخفاء، ولكن نرجع أبعاد للاستخدام الداخلي
+      // On mobile: hide, but return dimensions for internal use
       return { width: 728, height: 90 };
     case 'vertical':
       return {
@@ -110,8 +110,8 @@ export const getAdDimensions = (adType: string, breakpoint: string): { width: nu
 };
 
 /**
- * توليد كود إعلان متجاوب (Responsive ad code)
- * يستخدم لتوليد إعلان يتكيف مع حجم الحاوية
+ * Generate Responsive ad code
+ * Used to generate ad that adapts to container size
  */
 export const generateResponsiveAdCode = (publisherId: string, slotId: string): string => {
   return `
@@ -129,7 +129,7 @@ export const generateResponsiveAdCode = (publisherId: string, slotId: string): s
 };
 
 /**
- * الحصول على قائمة الإعلانات المناسبة لنوع الشاشة
+ * Get suitable ads list for screen type
  */
 export const getAdProvidersForBreakpoint = (
   adType: string,

@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { LayoutDashboard, Shield, MessageCircle, Download, Home, Globe, X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft, User, LogOut, Trash2, ChevronDown, ChevronRight, Rows3, Columns3, AlertTriangle, Copy, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Shield, MessageCircle, Download, Home,   X, Table, HelpCircle, Info, ShieldCheck, BookOpen, ArrowRightLeft, User, LogOut, Trash2, ChevronDown, ChevronRight, Rows3, Columns3, AlertTriangle, Copy, TrendingUp } from 'lucide-react';
 import { AdSpace } from './AdSpace';
 import { getActiveAdProviders } from '../config/adConfig';
-import type { Lang } from '../types';
 import { type User as FirebaseUser, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useKimitData } from '../hooks/useKimitData';
@@ -12,10 +11,10 @@ type Tab = 'home' | 'dashboard' | 'cleaning' | 'chat' | 'export' | 'files' | 'ab
 
 interface Props {
   tab: Tab;
-  lang: Lang;
+  
   hasData: boolean;
   onTab: (t: Tab) => void;
-  onLang: () => void;
+ 
   onClose: () => void;
   onClearSession?: () => void;
   onOpenEditor: () => void;
@@ -26,21 +25,6 @@ interface Props {
 }
 
 const T = {
-  ar: {
-    home: 'الرئيسية',
-    dashboard: 'التحليل',
-    cleaning: 'التنقية',
-    chat: 'المستشار',
-    export: 'تصدير',
-    files: 'الملفات المحفوظة',
-    close: 'إغلاق الملف',
-    clearSession: 'مسح الجلسة',
-    about: 'كيان',
-    privacy: 'أمان',
-    faq: 'سؤال',
-    guide: 'دليل',
-    compare: 'مقارنة',
-  },
   en: {
     home: 'Home',
     dashboard: 'Analytics',
@@ -325,9 +309,8 @@ const QuickBtn: React.FC<{ label: string; color: string; onClick: () => void }> 
 };
 
 // ── Main Sidebar ────────────────────────────────────────────────
-export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, onClose, onClearSession, onOpenEditor, isMobileOpen, onCloseMobile, currentUser, onLoginClick }) => {
-  const t = T[lang];
-  const isAr = lang === 'ar';
+export const Sidebar: React.FC<Props> = ({ tab, hasData, onTab, onClose, onClearSession, onOpenEditor, isMobileOpen, onCloseMobile, currentUser, onLoginClick }) => {
+  const t = T.en;
 
   const renderBtn = (item: { tab: Tab; icon: React.ElementType; key: string }) => {
     const Icon = item.icon;
@@ -340,7 +323,7 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
         key={item.tab}
         className={`nav-btn ${tab === item.tab ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
         onClick={() => !disabled && onTab(item.tab)}
-        title={disabled ? (isAr ? 'ارفع ملف أولاً' : 'Upload a file first') : ''}
+        title={disabled ? 'Upload a file first' : ''}
       >
         <Icon size={18} strokeWidth={2} />
         <span className="nav-label">{label}</span>
@@ -383,9 +366,9 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
             )}
             <div className="sidebar-user-info">
               <span className="sidebar-user-name" title={currentUser.displayName || currentUser.email || ''}>
-                {currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'مستخدم')}
+                {currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User')}
               </span>
-              <button className="sidebar-logout-btn" onClick={() => signOut(auth)} title={isAr ? 'تسجيل الخروج' : 'Sign out'}>
+              <button className="sidebar-logout-btn" onClick={() => signOut(auth)} title="Sign out">
                 <LogOut size={14} />
               </button>
             </div>
@@ -394,8 +377,8 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
           <button className="sidebar-login-btn-top" onClick={onLoginClick}>
             <div className="sidebar-login-icon"><User size={16} /></div>
             <div className="sidebar-login-texts">
-              <span className="sidebar-login-title">{isAr ? 'تسجيل الدخول' : 'Sign In'}</span>
-              <span className="sidebar-login-sub">{isAr ? 'للوصول لجميع الميزات' : 'Unlock all features'}</span>
+              <span className="sidebar-login-title">Sign In</span>
+              <span className="sidebar-login-sub">Unlock all features</span>
             </div>
           </button>
         )}
@@ -409,7 +392,7 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
         {hasData && (
           <button className="excel-btn" onClick={onOpenEditor}>
             <Table size={19} strokeWidth={1.8} />
-            <span className="nav-label">{isAr ? 'جدول الإكسيل' : 'Excel Editor'}</span>
+            <span className="nav-label">Excel Editor</span>
           </button>
         )}
 
@@ -424,7 +407,7 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
         <div className="nav-divider" />
 
         <div className="nav-section">
-          <p className="section-title">{isAr ? 'الدعم والمعلومات' : 'Support & Info'}</p>
+          <p className="section-title">Support &amp; Info</p>
           {supportItems.map(renderBtn)}
         </div>
       </nav>
@@ -442,10 +425,7 @@ export const Sidebar: React.FC<Props> = ({ tab, lang, hasData, onTab, onLang, on
             </button>
           </>
         )}
-        <button className="lang-toggle" onClick={onLang}>
-          <Globe size={15} />
-          <span>{isAr ? 'English' : 'عربي'}</span>
-        </button>
+
 
         <div className="sidebar-ad">
           <AdSpace type="responsive" providers={getActiveAdProviders()} minHeight={100} />

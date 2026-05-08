@@ -36,18 +36,18 @@ const MODELS: ModelConfig[] = [
   {
     id: 'google/gemini-2.0-flash-001',
     name: 'Gemini 2.0 Flash',
-    description: 'سريع ومجاني + رؤية الصور',
+    description: 'Fast & free + image vision',
     vision: true,
     icon: <Zap size={14} />,
-    badge: 'مجاني'
+    badge: 'Free'
   },
 ];
 
 const SUGGESTED_PROMPTS = [
-  'اشرح لي مفهوم الذكاء الاصطناعي',
-  'ساعدني في تحليل البيانات',
-  'اكتب لي كود Python',
-  'لخص لي هذا الموضوع',
+  'Explain the concept of AI to me',
+  'Help me analyze my data',
+  'Write me a Python script',
+  'Summarize this topic for me',
 ];
 
 export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUpload?: (file: File) => void, onUpdate?: (dataset: DatasetInfo) => void }> = ({ dataset, onFileUpload, onUpdate }) => {
@@ -125,7 +125,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
   }, [messages, loading]);
 
   const handleSignOut = async () => {
-    try { await signOut(auth); setMessages([]); } catch { setError('فشل في تسجيل الخروج.'); }
+    try { await signOut(auth); setMessages([]); } catch { setError('Failed to sign out.'); }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,7 +160,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
     let userContent: string | MessageContent[];
     if (attachedImage && selectedModel.vision) {
       userContent = [
-        { type: 'text', text: input.trim() || 'حلل هذه الصورة.' },
+        { type: 'text', text: input.trim() || 'Analyze this image.' },
         { type: 'image_url', image_url: { url: attachedImage } }
       ];
     } else {
@@ -175,38 +175,38 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
     if (textareaRef.current) { textareaRef.current.style.height = '52px'; setTextareaHeight(52); }
 
     try {
-      let systemPrompt = `أنت DataPath AI، المعماري الرئيسي (Ultimate Master Architect). تمتلك أكثر من 100 مهارة احترافية في 5 مجالات أساسية:
+      let systemPrompt = `You are Kimit AI, the Ultimate Master Architect. You possess over 100 professional skills across 5 core domains:
 
-1. هندسة النظم (System Architecture): خبير في تصميم النظم، الـ APIs، والتقنيات السحابية.
-2. علوم البيانات (Data Science): محترف في تحليل البيانات، التنظيف، والنمذجة الإحصائية والتنبؤية.
-3. التصميم البصري (UI/UX Strategy): متخصص في واجهات المستخدم الاحترافية وتجربة المستخدم المميزة.
-4. التخطيط الاستراتيجي (Strategic Planning): خبير في إدارة المنتجات والديون التقنية بأسلوب Agile.
-5. حل المشكلات (Problem Solving): ممارس للتفكير من المبادئ الأولى (First Principles) والتحليل الجذري.
+1. System Architecture: Expert in designing systems, APIs, and cloud technologies.
+2. Data Science: Professional in data analysis, cleaning, statistical modeling, and forecasting.
+3. UI/UX Strategy: Specialist in professional user interfaces and premium user experiences.
+4. Strategic Planning: Expert in product management and technical debt using Agile methodology.
+5. Problem Solving: Practitioner of First Principles thinking and root cause analysis.
 
-تواصلك دائماً باللغة العربية بأسلوب احترافي، مرجعي، وودود.
+You always communicate in a professional, authoritative, and friendly manner.
 
-قدراتك التقنية للتعديل المباشر:
-عندما يطلب المستخدم تعديل البيانات (حذف عمود، إعادة تسمية، ملء القيم المفقودة، إضافة عمود محسوب، فلترة، ترتيب، استبدال قيم)، يجب أن ترد بكائن JSON فقط بالصيغة التالية وبدون أي نص إضافي:
+Your technical capabilities for direct data edits:
+When the user requests data modifications (delete column, rename, fill missing values, add calculated column, filter, sort, replace values), respond with ONLY a JSON object in the following format and no additional text:
 {
   "action": "edit",
   "type": "delete_column" | "rename_column" | "fill_nulls" | "apply_formula" | "add_column" | "filter_rows" | "sort" | "replace_value",
-  "target": "<اسم العمود أو شرط الصفوف>",
-  "value": "<القيمة الجديدة أو الصيغة أو العملية>",
-  "description": "<جملة واحدة تصف ما تم فعله بلغة المستخدم>"
+  "target": "<column name or row condition>",
+  "value": "<new value, formula, or operation>",
+  "description": "<one sentence describing what was done>"
 }
 
-إذا كان طلب المستخدم سؤالاً أو تحليلاً وليس تعديلاً، أجب نصياً بشكل طبيعي مستخدماً مهاراتك الشاملة.
-إذا كان الطلب يحتاج كود JavaScript معقد، ضع الكود داخل \`\`\`javascript ... \`\`\` وتأكد أنه يعيد (return) المصفوفة المعدلة.`;
+If the user's request is a question or analysis (not an edit), respond naturally in text using your full skill set.
+If the request requires complex JavaScript code, place the code inside \`\`\`javascript ... \`\`\` and make sure it returns (return) the modified array.`;
 
       if (dataset) {
         const sampleData = dataset.workData.slice(0, 3);
-        systemPrompt += `\n\nالسياق الحالي للبيانات (Data Context):\n` +
-          `اسم الملف: ${dataset.filename}\n` +
-          `عدد الصفوف: ${dataset.rows} | عدد الأعمدة: ${dataset.columns.length}\n` +
-          `قائمة الأعمدة: ${dataset.columns.map(c => `${c.name} (${c.type})`).join(', ')}\n` +
-          `عينة من البيانات:\n` +
+        systemPrompt += `\n\nCurrent Data Context:\n` +
+          `File name: ${dataset.filename}\n` +
+          `Rows: ${dataset.rows} | Columns: ${dataset.columns.length}\n` +
+          `Column list: ${dataset.columns.map(c => `${c.name} (${c.type})`).join(', ')}\n` +
+          `Data sample:\n` +
           `${JSON.stringify(sampleData, null, 2)}\n\n` +
-          `ملاحظة هامة جداً 🚨: إذا طلب المستخدم تعديلاً معقداً جداً، أو كانت أسماء الأعمدة مشوهة (مثل __EMPTY) والمستخدم يشير لاسم حقيقي موجود في العينة، **لا تستخدم الـ JSON السريع**. بدلاً من ذلك، اكتب كود JavaScript بداخل \`\`\`javascript ... \`\`\` يستقبل المتغير \`data\` (وهو مصفوفة البيانات)، يحلل المشكلة، يطبق التعديل المطلوب بدقة، ويعيد \`return\` المصفوفة الجديدة.`;
+          `⚠️ Important Note: If the user requests a very complex modification, or column names are distorted (e.g. __EMPTY) but the user refers to a real name visible in the sample, **do NOT use the quick JSON format**. Instead, write JavaScript code inside \`\`\`javascript ... \`\`\` that receives the \`data\` array, analyzes the problem, accurately applies the modification, and \`return\`s the new array.`;
       }
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -227,7 +227,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || 'فشل في الاتصال بـ OpenRouter');
+      if (!response.ok) throw new Error(data.error?.message || 'Failed to connect to OpenRouter');
 
       let aiContent = data.choices[0].message.content;
 
@@ -339,7 +339,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
             }
 
             onUpdate(analyzeDataset(new File([], dataset.filename), newData));
-            aiContent = editAction.description + "\n\n*(تم تحديث جدول البيانات بنجاح بناءً على طلبك ✨)*";
+            aiContent = editAction.description + "\n\n*(Dataset updated successfully based on your request ✨)*";
           }
         } catch {
           // Not valid JSON — try JS code block fallback
@@ -353,10 +353,10 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
               if (Array.isArray(result)) newData = result;
               const { analyzeDataset } = await import('../lib/dataUtils');
               onUpdate(analyzeDataset(new File([], dataset.filename), newData));
-              aiContent += "\n\n*(تم تحديث جدول البيانات بنجاح بناءً على طلبك ✨)*";
+              aiContent += "\n\n*(Dataset updated successfully based on your request ✨)*";
             } catch (err) {
               console.error("AI Error:", err);
-              aiContent += "\n\n*(حدث خطأ أثناء محاولة تنفيذ التعديل)*";
+              aiContent += "\n\n*(An error occurred while applying the edit)*";
             }
           }
         }
@@ -364,7 +364,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
 
       setMessages(prev => [...prev, { role: 'assistant', content: aiContent, timestamp: new Date() }]);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ.');
+      setError(err instanceof Error ? err.message : 'An error occurred.');
     } finally {
       setLoading(false);
     }
@@ -372,11 +372,11 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
 
   const formatTime = (date?: Date) => {
     if (!date) return '';
-    return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const clearChat = () => {
-    if (window.confirm('هل تريد مسح سجل المحادثة؟')) {
+    if (window.confirm('Clear chat history?')) {
       setMessages([]);
     }
   };
@@ -384,7 +384,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
   if (!authChecked) return <div className="or-chat-root flex items-center justify-center h-full"><Loader2 size={32} className="spin text-indigo-400" /></div>;
 
   return (
-    <div className="or-chat-root" dir="rtl">
+    <div className="or-chat-root" dir="ltr">
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => {}} />
       <div className="or-ambient-glow" />
       
@@ -403,12 +403,12 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
               <img src={currentUser.photoURL || ''} alt="" className="or-user-avatar" />
               <div className="or-user-info">
                 <span className="or-user-name">{currentUser.displayName}</span>
-                <span className="or-user-status">متصل</span>
+                <span className="or-user-status">Online</span>
               </div>
               <button className="or-signout-btn" onClick={handleSignOut}><LogOut size={14} /></button>
             </div>
           ) : (
-            <button className="or-signin-btn" onClick={() => setShowAuthModal(true)}><User size={14} /> تسجيل الدخول</button>
+            <button className="or-signin-btn" onClick={() => setShowAuthModal(true)}><User size={14} /> Sign In</button>
           )}
         </div>
       </div>
@@ -417,7 +417,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
         {messages.length === 0 && (
           <div className="or-empty-state">
             <Bot size={48} className="text-indigo-400 mb-4" />
-            <h2 className="or-empty-title">كيف يمكنني مساعدتك؟</h2>
+            <h2 className="or-empty-title">How can I help you?</h2>
             <div className="or-suggestions">
               {SUGGESTED_PROMPTS.map(p => <button key={p} className="or-suggestion-chip" onClick={() => setInput(p)}>{p}</button>)}
             </div>
@@ -441,7 +441,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
             <div className="or-avatar assistant"><Bot size={16} /></div>
             <div className="or-bubble assistant or-typing">
               <span /><span /><span />
-              <div className="ms-3 text-xs text-emerald-400 font-bold">جاري العمل...</div>
+              <div className="ms-3 text-xs text-emerald-400 font-bold">Working...</div>
             </div>
           </div>
         )}
@@ -455,7 +455,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
              <textarea 
                 ref={textareaRef} 
                 className="or-textarea" 
-                placeholder="اطلب تحليل أو تعديل البيانات..." 
+                placeholder="Ask for analysis or data editing..." 
                 value={input} 
                 onChange={handleTextareaInput}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
@@ -475,7 +475,7 @@ export const OpenRouterChat: React.FC<{ dataset?: DatasetInfo | null, onFileUplo
       </div>
 
       <style>{`
-        .or-chat-root { display: flex; flex-direction: column; height: 100%; background: #020617; position: relative; overflow: hidden; font-family: 'Cairo', sans-serif; }
+        .or-chat-root { display: flex; flex-direction: column; height: 100%; background: #020617; position: relative; overflow: hidden; font-family: 'Inter', sans-serif; }
         .or-ambient-glow { position: absolute; top: -150px; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%); pointer-events: none; }
         .or-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(15,23,42,0.8); border-bottom: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px); z-index: 10; }
         .or-header-brand { display: flex; align-items: center; gap: 12px; }
