@@ -2,21 +2,21 @@ import jsPDF from 'jspdf';
 import type { DatasetInfo } from '../types';
 import logoImg from '../assets/logo.png';
 
-// ── Color Palette (light/print-friendly for managers) ──────────────
+// ── Ultra-Premium Color Palette ─────────────────────────────────────
 const C = {
-  navy:    [15, 32, 67]    as [number,number,number],
-  gold:    [180, 140, 30]  as [number,number,number],
-  goldL:   [212, 175, 55]  as [number,number,number],
-  white:   [255, 255, 255] as [number,number,number],
-  offW:    [248, 249, 252] as [number,number,number],
-  lightBg: [241, 244, 250] as [number,number,number],
-  slate:   [71, 85, 105]   as [number,number,number],
-  slateL:  [148, 163, 184] as [number,number,number],
-  green:   [5, 150, 105]   as [number,number,number],
-  red:     [185, 28, 28]   as [number,number,number],
-  orange:  [180, 100, 10]  as [number,number,number],
-  sky:     [14, 116, 144]  as [number,number,number],
-  border:  [220, 225, 235] as [number,number,number],
+  bgDark:   [10, 15, 30]    as [number,number,number], // Deep Obsidian Blue
+  bgCard:   [18, 25, 45]    as [number,number,number],
+  gold:     [212, 175, 55]  as [number,number,number], // Luxury Gold
+  goldLight:[235, 205, 110] as [number,number,number],
+  white:    [255, 255, 255] as [number,number,number],
+  offWhite: [240, 244, 252] as [number,number,number],
+  slate:    [100, 116, 139] as [number,number,number],
+  slateLight:[148, 163, 184] as [number,number,number],
+  green:    [16, 185, 129]  as [number,number,number],
+  red:      [239, 68, 68]   as [number,number,number],
+  orange:   [245, 158, 11]  as [number,number,number],
+  cyan:     [6, 182, 212]   as [number,number,number],
+  border:   [40, 50, 75]    as [number,number,number],
 };
 
 export interface ReportOptions {
@@ -27,17 +27,19 @@ export interface ReportOptions {
   insights?: { title: string; description: string; type: 'info'|'positive'|'warning' }[];
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────
-const rgb  = (d: jsPDF, c: [number,number,number]) => d.setTextColor(...c);
-const fill = (d: jsPDF, c: [number,number,number], x: number, y: number, w: number, h: number) => {
-  d.setFillColor(...c); d.rect(x, y, w, h, 'F');
+// ── High-End Rendering Helpers ────────────────────────────────────────
+const rgb = (d: jsPDF, c: [number,number,number]) => d.setTextColor(...c);
+const fill = (d: jsPDF, c: [number,number,number], x: number, y: number, w: number, h: number, rx = 0) => {
+  d.setFillColor(...c); 
+  if (rx > 0) d.roundedRect(x, y, w, h, rx, rx, 'F');
+  else d.rect(x, y, w, h, 'F');
 };
 const line = (d: jsPDF, c: [number,number,number], x1: number, y1: number, x2: number, lw = 0.4) => {
   d.setDrawColor(...c); d.setLineWidth(lw); d.line(x1, y1, x2, y1);
 };
 const fmtN = (n: number) =>
   n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n.toLocaleString();
-const pct  = (a: number, b: number) => b === 0 ? '0%' : ((a/b)*100).toFixed(1)+'%';
+const pct = (a: number, b: number) => b === 0 ? '0%' : ((a/b)*100).toFixed(1)+'%';
 
 async function loadLogo(): Promise<HTMLImageElement|null> {
   return new Promise(res => {
@@ -49,41 +51,61 @@ async function loadLogo(): Promise<HTMLImageElement|null> {
   });
 }
 
-// ── PAGE HEADER + FOOTER ────────────────────────────────────────────
+function drawHexagon(d: jsPDF, x: number, y: number, size: number, color: [number,number,number], alpha = 1) {
+  d.setFillColor(...color);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  d.setGState(new (d as any).GState({ opacity: alpha }));
+  const points = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i;
+    points.push([x + size * Math.cos(angle), y + size * Math.sin(angle)]);
+  }
+  d.lines(points.map((p, i) => i === 0 ? [p[0]-x, p[1]-y] : [p[0] - points[i-1][0], p[1] - points[i-1][1]]), x, y, [1, 1], 'F');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  d.setGState(new (d as any).GState({ opacity: 1 }));
+}
+
+// ── PAGE CHROME (Dark Theme) ──────────────────────────────────────────
 function pageChrome(d: jsPDF, page: number, total: number, filename: string, logo: HTMLImageElement|null) {
   const W = d.internal.pageSize.getWidth();
   const H = d.internal.pageSize.getHeight();
 
-  // Header bar
-  fill(d, C.navy, 0, 0, W, 16);
-  if (logo) d.addImage(logo, 'PNG', 8, 2.5, 11, 11);
-  d.setFont('helvetica', 'bold'); d.setFontSize(9);
-  rgb(d, C.goldL); d.text('KIMIT AI STUDIO', 22, 10);
-  d.setFont('helvetica', 'normal'); d.setFontSize(7.5);
-  rgb(d, C.slateL); d.text(filename, W/2, 10, { align: 'center' });
-  d.text(`Page ${page} of ${total}`, W - 8, 10, { align: 'right' });
+  // Dark background for all pages
+  fill(d, C.bgDark, 0, 0, W, H);
 
-  // Gold underline
-  fill(d, C.goldL, 0, 16, W, 0.6);
+  // Header
+  fill(d, C.bgCard, 0, 0, W, 20);
+  fill(d, C.gold, 0, 20, W, 0.5);
+  
+  if (logo) d.addImage(logo, 'PNG', 12, 4, 12, 12);
+  d.setFont('helvetica', 'bold'); d.setFontSize(10);
+  rgb(d, C.gold); d.text('KIMIT AI STUDIO', 30, 12.5);
+  
+  d.setFont('helvetica', 'italic'); d.setFontSize(8);
+  rgb(d, C.slateLight); d.text(filename, W/2, 12.5, { align: 'center' });
+  
+  d.setFont('helvetica', 'normal'); d.setFontSize(8);
+  rgb(d, C.goldLight); d.text(`PAGE ${page} / ${total}`, W - 12, 12.5, { align: 'right' });
 
   // Footer
-  fill(d, C.lightBg, 0, H - 10, W, 10);
-  line(d, C.border, 0, H - 10, W, 0.3);
-  d.setFontSize(6.5); rgb(d, C.slate);
-  d.text('KIMIT AI STUDIO  •  Confidential Executive Report  •  For Authorized Management Use Only', W/2, H - 4, { align: 'center' });
+  fill(d, C.bgCard, 0, H - 14, W, 14);
+  line(d, C.border, 0, H - 14, W, 0.5);
+  d.setFontSize(7); rgb(d, C.slate);
+  d.text('© KIMIT AI STUDIO • CONFIDENTIAL EXECUTIVE INTELLIGENCE', W/2, H - 6, { align: 'center', charSpace: 1 });
 }
 
-// ── SECTION HEADING ─────────────────────────────────────────────────
-function secHead(d: jsPDF, label: string, y: number, accent: [number,number,number] = C.navy): number {
+// ── SECTION HEADING ───────────────────────────────────────────────────
+function secHead(d: jsPDF, label: string, y: number, accent: [number,number,number] = C.gold): number {
   const W = d.internal.pageSize.getWidth();
-  fill(d, C.lightBg, 10, y, W - 20, 11);
-  fill(d, accent, 10, y, 3, 11);
-  d.setFont('helvetica', 'bold'); d.setFontSize(9);
-  d.setTextColor(...accent); d.text(label, 16, y + 7.5);
-  return y + 17;
+  fill(d, C.bgCard, 12, y, W - 24, 14, 2);
+  fill(d, accent, 12, y, 4, 14); // Left accent bar
+  d.setFont('helvetica', 'bold'); d.setFontSize(10);
+  d.setTextColor(...accent); 
+  d.text(label.toUpperCase(), 22, y + 9.5, { charSpace: 1.5 });
+  return y + 22;
 }
 
-// ── KPI CARDS ───────────────────────────────────────────────────────
+// ── PREMIUM KPI CARDS ─────────────────────────────────────────────────
 function kpiCards(
   d: jsPDF,
   cards: { label: string; val: string; sub?: string; color: [number,number,number] }[],
@@ -91,23 +113,32 @@ function kpiCards(
 ): number {
   const W = d.internal.pageSize.getWidth();
   const n = cards.length;
-  const cw = (W - 20 - (n - 1) * 4) / n;
+  const cw = (W - 24 - (n - 1) * 6) / n;
   cards.forEach((c, i) => {
-    const cx = 10 + i * (cw + 4);
-    fill(d, C.white, cx, y, cw, 22);
-    d.setDrawColor(...C.border); d.setLineWidth(0.3);
-    d.rect(cx, y, cw, 22, 'S');
-    fill(d, c.color, cx, y, cw, 2.5);
-    d.setFont('helvetica', 'normal'); d.setFontSize(6.5);
-    rgb(d, C.slate); d.text(c.label.toUpperCase(), cx + 4, y + 9);
-    d.setFont('helvetica', 'bold'); d.setFontSize(14);
-    d.setTextColor(...c.color); d.text(c.val, cx + 4, y + 19);
-    if (c.sub) { d.setFontSize(6); rgb(d, C.slateL); d.text(c.sub, cx + cw - 4, y + 19, { align: 'right' }); }
+    const cx = 12 + i * (cw + 6);
+    fill(d, C.bgCard, cx, y, cw, 26, 3);
+    d.setDrawColor(...C.border); d.setLineWidth(0.5);
+    d.roundedRect(cx, y, cw, 26, 3, 3, 'S');
+    
+    // Top colored line
+    fill(d, c.color, cx + 2, y, cw - 4, 1.5);
+    
+    d.setFont('helvetica', 'bold'); d.setFontSize(7);
+    rgb(d, C.slateLight); d.text(c.label.toUpperCase(), cx + 6, y + 10, { charSpace: 0.5 });
+    
+    d.setFont('helvetica', 'bold'); d.setFontSize(16);
+    d.setTextColor(...c.color); d.text(c.val, cx + 6, y + 21);
+    
+    if (c.sub) { 
+      d.setFont('helvetica', 'normal'); d.setFontSize(6.5); 
+      rgb(d, C.slate); 
+      d.text(c.sub, cx + cw - 6, y + 21, { align: 'right' }); 
+    }
   });
-  return y + 28;
+  return y + 34;
 }
 
-// ── TABLE ROW ───────────────────────────────────────────────────────
+// ── ELEGANT TABLE ROW ─────────────────────────────────────────────────
 function tableRow(
   d: jsPDF,
   cols: string[],
@@ -117,25 +148,35 @@ function tableRow(
   isHeader = false,
   isAlt = false
 ): number {
-  const rowH = isHeader ? 9 : 8;
-  if (isHeader) fill(d, C.navy, startX, y, widths.reduce((a, b) => a + b, 0) + (cols.length - 1) * 0.3, rowH);
-  else if (isAlt) fill(d, C.lightBg, startX, y, widths.reduce((a, b) => a + b, 0) + (cols.length - 1) * 0.3, rowH);
+  const rowH = isHeader ? 11 : 9;
+  const totalW = widths.reduce((a, b) => a + b, 0) + (cols.length - 1) * 0.5;
+  
+  if (isHeader) {
+    fill(d, C.gold, startX, y, totalW, rowH, 1);
+  } else if (isAlt) {
+    fill(d, C.bgCard, startX, y, totalW, rowH);
+  }
 
   d.setFont('helvetica', isHeader ? 'bold' : 'normal');
-  d.setFontSize(isHeader ? 7 : 7.5);
-  rgb(d, isHeader ? C.white : C.navy);
+  d.setFontSize(isHeader ? 8 : 7.5);
+  rgb(d, isHeader ? C.bgDark : C.offWhite);
 
   let x = startX;
   cols.forEach((col, i) => {
     const txt = d.splitTextToSize(col, widths[i] - 4);
-    d.text(txt[0] ?? '', x + 3, y + (isHeader ? 6 : 5.5));
-    x += widths[i] + 0.3;
+    d.text(txt[0] ?? '', x + 4, y + (isHeader ? 7.5 : 6.5));
+    x += widths[i] + 0.5;
   });
-  return y + rowH + 0.5;
+  
+  if (!isHeader) {
+    line(d, C.border, startX, y + rowH, startX + totalW, 0.2);
+  }
+  
+  return y + rowH;
 }
 
 // ══════════════════════════════════════════════════════════════════
-// PAGE 1 — COVER
+// PAGE 1 — LUXURY COVER
 // ══════════════════════════════════════════════════════════════════
 async function drawCover(
   d: jsPDF,
@@ -144,69 +185,63 @@ async function drawCover(
   const W = d.internal.pageSize.getWidth();
   const H = d.internal.pageSize.getHeight();
 
-  // White background
-  fill(d, C.white, 0, 0, W, H);
+  // Deep Background
+  fill(d, C.bgDark, 0, 0, W, H);
+  
+  // Decorative Geometric Background (Hexagons)
+  drawHexagon(d, W, 0, 120, C.gold, 0.03);
+  drawHexagon(d, W - 40, -20, 80, C.cyan, 0.02);
+  drawHexagon(d, 0, H, 150, C.gold, 0.03);
 
-  // Top navy band
-  fill(d, C.navy, 0, 0, W, 50);
-  fill(d, C.goldL, 0, 50, W, 1.5);
-
-  // Logo + brand
+  // Logo + Brand
   const logo = await loadLogo();
-  if (logo) d.addImage(logo, 'PNG', 14, 12, 22, 22);
-  d.setFont('helvetica', 'bold'); d.setFontSize(22);
-  rgb(d, C.goldL); d.text('KIMIT AI STUDIO', 42, 27);
-  d.setFont('helvetica', 'normal'); d.setFontSize(9);
-  rgb(d, C.slateL); d.text('Advanced Data Intelligence & Analytics Platform', 42, 37);
+  if (logo) d.addImage(logo, 'PNG', 20, 30, 30, 30);
+  d.setFont('helvetica', 'bold'); d.setFontSize(28);
+  rgb(d, C.gold); d.text('KIMIT', 55, 45, { charSpace: 4 });
+  rgb(d, C.white); d.text('AI STUDIO', 95, 45, { charSpace: 4 });
+  
+  d.setFont('helvetica', 'normal'); d.setFontSize(10);
+  rgb(d, C.cyan); d.text('ENTERPRISE DATA INTELLIGENCE PLATFORM', 56, 55, { charSpace: 2 });
 
-  // Title block
-  const tY = 80;
-  fill(d, C.lightBg, 0, tY, W, 60);
-  fill(d, C.goldL, 0, tY, 5, 60);
-  d.setFont('helvetica', 'bold'); d.setFontSize(24);
-  rgb(d, C.navy);
-  const titleLines = d.splitTextToSize(opts.title || 'Executive Intelligence Report', W - 30);
-  d.text(titleLines, W/2, tY + 22, { align: 'center' });
-  d.setFont('helvetica', 'normal'); d.setFontSize(11);
-  rgb(d, C.gold);
-  d.text(opts.subtitle || 'Strategic Data Analysis & Decision Intelligence', W/2, tY + 38, { align: 'center' });
+  // Title Block
+  const tY = 110;
+  fill(d, C.bgCard, 0, tY, W, 70);
+  fill(d, C.gold, 0, tY, 6, 70);
+  
+  d.setFont('helvetica', 'bold'); d.setFontSize(32);
+  rgb(d, C.white);
+  const titleLines = d.splitTextToSize((opts.title || 'Executive Intelligence').toUpperCase(), W - 40);
+  d.text(titleLines, 24, tY + 28);
+  
+  d.setFont('helvetica', 'italic'); d.setFontSize(14);
+  rgb(d, C.goldLight);
+  d.text(opts.subtitle || 'Strategic Data Analysis & Automated Insights', 24, tY + 52);
 
-  // Meta info
-  const metaY = tY + 72;
+  // Meta Info Grid
+  const metaY = tY + 95;
   const metas = [
-    { l: 'DATASET', v: opts.filename },
-    { l: 'RECORDS', v: fmtN(opts.rows) },
-    { l: 'COLUMNS', v: String(opts.cols) },
-    { l: 'GENERATED', v: opts.generatedAt },
+    { l: 'SOURCE DATASET', v: opts.filename },
+    { l: 'TOTAL RECORDS', v: fmtN(opts.rows) },
+    { l: 'DATA DIMENSIONS', v: String(opts.cols) + ' Columns' },
+    { l: 'TIMESTAMP', v: opts.generatedAt },
   ];
+  
   metas.forEach((m, i) => {
-    const cx = 14 + i * 47;
-    fill(d, C.lightBg, cx, metaY, 43, 24);
-    d.setDrawColor(...C.border); d.setLineWidth(0.3);
-    d.rect(cx, metaY, 43, 24, 'S');
-    fill(d, C.navy, cx, metaY, 43, 3);
-    d.setFont('helvetica', 'bold'); d.setFontSize(6);
-    rgb(d, C.goldL); d.text(m.l, cx + 4, metaY + 8.5);
-    d.setFont('helvetica', 'bold'); d.setFontSize(13);
-    rgb(d, C.navy); d.text(m.v, cx + 4, metaY + 20);
+    const cx = 20 + (i % 2) * 90;
+    const cy = metaY + Math.floor(i / 2) * 25;
+    d.setFont('helvetica', 'bold'); d.setFontSize(8);
+    rgb(d, C.slate); d.text(m.l, cx, cy, { charSpace: 1 });
+    d.setFont('helvetica', 'bold'); d.setFontSize(12);
+    rgb(d, C.offWhite); d.text(m.v, cx, cy + 6);
   });
 
-  // Prepared for
-  const prepY = metaY + 36;
+  // Footer Confidentiality
+  const prepY = H - 40;
+  line(d, C.border, 20, prepY, W - 20, 0.5);
   d.setFont('helvetica', 'bold'); d.setFontSize(9);
-  rgb(d, C.navy); d.text('PREPARED FOR', W/2, prepY, { align: 'center' });
+  rgb(d, C.gold); d.text('STRICTLY CONFIDENTIAL', W/2, prepY + 12, { align: 'center', charSpace: 2 });
   d.setFont('helvetica', 'normal'); d.setFontSize(8);
-  rgb(d, C.slate); d.text('Management & Executive Leadership Team', W/2, prepY + 8, { align: 'center' });
-
-  // Divider
-  line(d, C.border, 14, prepY + 16, W - 14, 0.5);
-
-  // Confidential footer
-  fill(d, C.navy, 0, H - 22, W, 22);
-  d.setFont('helvetica', 'bold'); d.setFontSize(8);
-  rgb(d, C.goldL); d.text('CONFIDENTIAL & PROPRIETARY', W/2, H - 12, { align: 'center' });
-  d.setFont('helvetica', 'normal'); d.setFontSize(6.5);
-  rgb(d, C.slateL); d.text('For Authorized Management Use Only — Do Not Distribute', W/2, H - 5, { align: 'center' });
+  rgb(d, C.slateLight); d.text('Prepared exclusively for Executive Leadership and Management Teams.', W/2, prepY + 20, { align: 'center' });
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -214,67 +249,65 @@ async function drawCover(
 // ══════════════════════════════════════════════════════════════════
 function drawPage2(d: jsPDF, info: DatasetInfo, health: { score: number; label: string }) {
   const W = d.internal.pageSize.getWidth();
-  fill(d, C.white, 0, 0, W, 297);
-  let y = 22;
-
+  let y = 30;
 
   const completeness = info.totalNulls > 0
     ? (100 - (info.totalNulls / (info.rows * info.columns.length) * 100)).toFixed(1)
     : '100.0';
 
-  // 01 — EXECUTIVE SUMMARY
-  y = secHead(d, '01   EXECUTIVE SUMMARY', y);
+  y = secHead(d, '01. Executive Overview', y, C.gold);
 
   // Situation block
-  fill(d, C.lightBg, 10, y, W - 20, 26);
-  d.setDrawColor(...C.border); d.rect(10, y, W - 20, 26, 'S');
-  fill(d, C.sky, 10, y, 3, 26);
-  d.setFont('helvetica', 'bold'); d.setFontSize(8); rgb(d, C.sky);
-  d.text('CURRENT SITUATION', 16, y + 7);
-  d.setFont('helvetica', 'normal'); d.setFontSize(8); rgb(d, C.navy);
-  const sit = `Dataset "${info.filename}" contains ${fmtN(info.rows)} records across ${info.columns.length} fields. Data completeness rate: ${completeness}% — Health Status: "${health.label}".`;
-  const sitW = d.splitTextToSize(sit, W - 34);
-  d.text(sitW, 16, y + 15);
-  y += 32;
+  fill(d, C.bgCard, 12, y, W - 24, 28, 2);
+  d.setDrawColor(...C.border); d.roundedRect(12, y, W - 24, 28, 2, 2, 'S');
+  fill(d, C.cyan, 12, y, 4, 28);
+  
+  d.setFont('helvetica', 'bold'); d.setFontSize(8); rgb(d, C.cyan);
+  d.text('DATASET PROFILE', 22, y + 8, { charSpace: 1 });
+  d.setFont('helvetica', 'normal'); d.setFontSize(9); rgb(d, C.offWhite);
+  const sit = `The dataset "${info.filename}" comprises ${fmtN(info.rows)} records across ${info.columns.length} dimensions. Overall data completeness is currently evaluated at ${completeness}%. System health algorithm assigns a status of "${health.label}".`;
+  const sitW = d.splitTextToSize(sit, W - 36);
+  d.text(sitW, 22, y + 16);
+  y += 36;
 
   // KPI Cards
   y = kpiCards(d, [
-    { label: 'Total Records',   val: fmtN(info.rows),        color: C.green },
-    { label: 'Completeness',    val: `${completeness}%`,     color: info.totalNulls > 0 ? C.orange : C.green },
-    { label: 'Missing Values',  val: fmtN(info.totalNulls),  sub: pct(info.totalNulls, info.rows * info.columns.length), color: info.totalNulls > 0 ? C.red : C.green },
-    { label: 'Duplicates',      val: fmtN(info.duplicates),  sub: pct(info.duplicates, info.rows), color: info.duplicates > 0 ? C.red : C.green },
-    { label: 'Health Score',    val: `${health.score}%`,     color: health.score >= 80 ? C.green : health.score >= 60 ? C.orange : C.red },
-  ], y + 4) + 8;
+    { label: 'Dataset Volume',  val: fmtN(info.rows),        color: C.cyan },
+    { label: 'Data Density',    val: `${completeness}%`,     color: info.totalNulls > 0 ? C.orange : C.green },
+    { label: 'Null Values',     val: fmtN(info.totalNulls),  sub: pct(info.totalNulls, info.rows * info.columns.length), color: info.totalNulls > 0 ? C.red : C.green },
+    { label: 'Duplications',    val: fmtN(info.duplicates),  sub: pct(info.duplicates, info.rows), color: info.duplicates > 0 ? C.red : C.green },
+    { label: 'Health Index',    val: `${health.score}/100`,  color: health.score >= 80 ? C.green : health.score >= 60 ? C.orange : C.red },
+  ], y + 4) + 12;
 
   // 02 — COLUMN SUMMARY TABLE
-  y = secHead(d, '02   COLUMN-LEVEL DATA QUALITY REPORT', y, C.sky);
+  y = secHead(d, '02. Dimensional Architecture', y, C.cyan);
 
-  const colW = [55, 22, 22, 28, 28, 28];
-  y = tableRow(d, ['Column Name', 'Type', 'Missing', 'Miss %', 'Unique', 'Health'], y, colW, 10, true);
+  const colW = [60, 25, 25, 25, 25, 20];
+  y = tableRow(d, ['Dimension Name', 'Data Type', 'Null Count', 'Null %', 'Distinct Vals', 'Health'], y, colW, 12, true);
+  
   info.columns.slice(0, 18).forEach((col, i) => {
     const missPct = info.rows > 0 ? ((col.nullCount ?? 0) / info.rows * 100).toFixed(1) + '%' : '0%';
     const colHealth = info.rows > 0 ? Math.round(((info.rows - (col.nullCount ?? 0)) / info.rows) * 100) : 100;
     y = tableRow(d, [
-      col.name,
-      col.type,
-      String(col.nullCount ?? 0),
+      col.name.length > 25 ? col.name.substring(0,22)+'...' : col.name,
+      col.type.toUpperCase(),
+      fmtN(col.nullCount ?? 0),
       missPct,
-      String(col.uniqueCount ?? 0),
+      fmtN(col.uniqueCount ?? 0),
       `${colHealth}%`,
-    ], y, colW, 10, false, i % 2 === 1);
+    ], y, colW, 12, false, i % 2 === 1);
     if (y > 260) return;
   });
+  
   if (info.columns.length > 18) {
-    d.setFontSize(7); rgb(d, C.slate);
-    d.text(`... and ${info.columns.length - 18} more columns`, 14, y + 5);
+    d.setFontSize(8); rgb(d, C.slateLight); d.setFont('helvetica', 'italic');
+    d.text(`... plus ${info.columns.length - 18} additional dimensions omitted for brevity.`, 16, y + 6);
     y += 10;
   }
-
-  return y;
 }
 
 // ══════════════════════════════════════════════════════════════════
-// PAGE 3 — ANOMALY + STRATEGIC RECOMMENDATIONS
+// PAGE 3 — ANOMALIES & STRATEGY
 // ══════════════════════════════════════════════════════════════════
 function drawPage3(
   d: jsPDF,
@@ -283,148 +316,127 @@ function drawPage3(
   insights: { title: string; description: string; type: string }[]
 ) {
   const W = d.internal.pageSize.getWidth();
-  fill(d, C.white, 0, 0, W, 297);
-  let y = 22;
+  let y = 30;
 
   const numCols = info.columns.filter(c => c.type === 'numeric');
 
-  // 03 — ANOMALY DETECTION
-  y = secHead(d, '03   ANOMALY DETECTION & RISK SIGNALS', y, C.red);
+  y = secHead(d, '03. Risk Signals & Anomalies', y, C.red);
 
   const anomalies: { tag: string; text: string; color: [number,number,number] }[] = [];
+  if (health.score < 100) {
+    anomalies.push({ tag: 'HEALTH STATUS', text: `System health score is ${health.score}/100. "${health.label}". Immediate attention to following anomalies is advised.`, color: health.score >= 80 ? C.green : health.score >= 60 ? C.orange : C.red });
+  }
+
   if (info.duplicates > 0)
-    anomalies.push({ tag: 'CRITICAL — Duplicates:', text: `${fmtN(info.duplicates)} duplicate rows found (${pct(info.duplicates, info.rows)} of dataset). All aggregate KPIs are currently overstated. Immediate deduplication required before any reporting.`, color: C.red });
+    anomalies.push({ tag: 'CRITICAL RISK — DUPLICATES', text: `${fmtN(info.duplicates)} duplicate records detected (${pct(info.duplicates, info.rows)} of dataset). This heavily skews aggregations. Immediate sanitization required.`, color: C.red });
   if (info.totalNulls > 0) {
     const np = ((info.totalNulls / (info.rows * info.columns.length)) * 100).toFixed(1);
-    anomalies.push({ tag: 'WARNING — Missing Data:', text: `${fmtN(info.totalNulls)} null values detected (${np}% of all cells). Imputation or exclusion needed before statistical modeling.`, color: C.orange });
+    anomalies.push({ tag: 'WARNING — DATA SPARSITY', text: `${fmtN(info.totalNulls)} null elements (${np}%). Model training or financial analysis requires strict imputation protocols.`, color: C.orange });
   }
   numCols.forEach(c => {
     if (c.min !== undefined && c.max !== undefined && c.mean !== undefined && c.max > 0) {
       const ratio = (c.max - c.min) / (c.mean || 1);
-      if (ratio > 10)
-        anomalies.push({ tag: `OUTLIER — "${c.name}":`, text: `Value range ${c.min.toFixed(2)} → ${c.max.toFixed(2)} (${ratio.toFixed(1)}× mean). Likely outlier records. Requires segment-level review.`, color: C.sky });
+      if (ratio > 15)
+        anomalies.push({ tag: `OUTLIER DETECTED — ${c.name.toUpperCase()}`, text: `Variance extreme: Range [${fmtN(c.min)} → ${fmtN(c.max)}]. Ratio to mean is ${ratio.toFixed(1)}x. Investigate for data entry errors.`, color: C.cyan });
     }
   });
   if (anomalies.length === 0)
-    anomalies.push({ tag: 'ALL CLEAR:', text: 'No critical anomalies detected. All numeric columns are within acceptable ranges. Dataset is ready for analysis.', color: C.green });
+    anomalies.push({ tag: 'SYSTEM VALIDATED', text: 'Zero structural anomalies detected. All parameters fall within acceptable enterprise thresholds.', color: C.green });
 
-  anomalies.forEach(item => {
-    fill(d, C.lightBg, 10, y, W - 20, 16);
-    d.setDrawColor(...C.border); d.rect(10, y, W - 20, 16, 'S');
-    fill(d, item.color, 10, y, 3, 16);
-    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...item.color);
-    d.text(item.tag, 16, y + 6);
-    d.setFont('helvetica', 'normal'); d.setFontSize(7.5); rgb(d, C.navy);
-    const w = d.splitTextToSize(item.text, W - 34);
-    d.text(w[0] ?? '', 16, y + 12);
-    y += 20;
+  anomalies.slice(0, 4).forEach(item => {
+    fill(d, C.bgCard, 12, y, W - 24, 18, 2);
+    fill(d, item.color, 12, y, 4, 18);
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...item.color);
+    d.text(item.tag, 22, y + 7, { charSpace: 0.5 });
+    d.setFont('helvetica', 'normal'); d.setFontSize(8); rgb(d, C.offWhite);
+    const w = d.splitTextToSize(item.text, W - 38);
+    d.text(w[0] ?? '', 22, y + 13);
+    y += 22;
   });
-  y += 4;
+  y += 6;
 
-  // 04 — STRATEGIC DECISION SCENARIOS
-  y = secHead(d, '04   STRATEGIC DECISION ARCHITECTURE — 3 PATHS FORWARD', y, C.navy);
+  y = secHead(d, '04. AI Strategic Advisory', y, C.gold);
 
-  const scenarios = [
-    { label: 'PATH A — SAFE (Low Risk)', desc: `Clean data first: remove ${fmtN(info.duplicates)} duplicates and fill ${fmtN(info.totalNulls)} missing values. Export a validated, clean dataset for reporting. Timeline: 1 day. Output: 100% reliable baseline metrics.`, color: C.green },
-    { label: 'PATH B — BALANCED (Medium Risk)', desc: `Clean + Analyze: After cleaning, apply segmentation on "${numCols[0]?.name ?? 'key columns'}" to identify top and under-performing groups. Provide management with actionable segment-level insights. Timeline: 3 days.`, color: C.sky },
-    { label: 'PATH C — BOLD (High ROI)', desc: `Full Intelligence Loop: Clean → Segment → Predict. Feed cleaned data into a forecasting model. Automate threshold alerts when KPIs deviate by >2 standard deviations. Timeline: 1 week.`, color: C.gold },
-  ];
-
-  scenarios.forEach(s => {
-    fill(d, C.white, 10, y, W - 20, 26);
-    d.setDrawColor(...C.border); d.rect(10, y, W - 20, 26, 'S');
-    fill(d, s.color, 10, y, 3, 26);
-    d.setFont('helvetica', 'bold'); d.setFontSize(8.5); d.setTextColor(...s.color);
-    d.text(s.label, 16, y + 8);
-    d.setFont('helvetica', 'normal'); d.setFontSize(7.5); rgb(d, C.navy);
-    const w = d.splitTextToSize(s.desc, W - 34);
-    d.text(w.slice(0, 2), 16, y + 16);
-    y += 30;
-  });
-  y += 4;
-
-  // 05 — FINAL RECOMMENDATION
-  y = secHead(d, '05   FINAL RECOMMENDATION — NEXT 24-HOUR ACTION PLAN', y, C.gold);
-
-  fill(d, C.lightBg, 10, y, W - 20, 52);
-  d.setDrawColor(...C.border); d.rect(10, y, W - 20, 52, 'S');
-  fill(d, C.goldL, 10, y, W - 20, 3);
-
+  fill(d, C.bgCard, 12, y, W - 24, 70, 2);
+  fill(d, C.gold, 12, y, W - 24, 3);
+  
   const recs = [
     info.duplicates > 0 || info.totalNulls > 0
-      ? `Step 1: Run "Magic Clean" immediately — remove ${fmtN(info.duplicates)} duplicates and impute ${fmtN(info.totalNulls)} null values. No decision should be based on uncleaned data.`
-      : `Step 1: Data is clean (${health.label}). Proceed directly to segmentation analysis.`,
+      ? `PHASE 1: Execute Automated Sanitization. Purge ${fmtN(info.duplicates)} duplicates and impute ${fmtN(info.totalNulls)} missing vectors.`
+      : `PHASE 1: Data Integrity Verified. Proceed immediately to advanced segmentation modeling.`,
     numCols.length > 0
-      ? `Step 2: Set a KPI alert on "${numCols[0].name}" — trigger escalation if value drops below ${((numCols[0].mean ?? 0) * 0.8).toFixed(2)} or exceeds ${((numCols[0].mean ?? 0) * 1.2).toFixed(2)}.`
-      : `Step 2: Add numeric KPI columns to enable automated threshold monitoring.`,
-    `Step 3: Distribute this report to all department heads. Assign an owner to each anomaly in Section 03 with a 48-hour resolution deadline.`,
+      ? `PHASE 2: Establish KPI telemetry on dimension "${numCols[0].name}". Set variance triggers at ±20% of the baseline mean (${fmtN(numCols[0].mean ?? 0)}).`
+      : `PHASE 2: Ingest continuous numerical metrics to enable algorithmic forecasting.`,
+    `PHASE 3: Distribute this intelligence payload to Department Heads. Enforce 48-hour SLA for anomaly resolution.`,
   ];
 
   recs.forEach((rec, i) => {
-    d.setFont('helvetica', 'normal'); d.setFontSize(8); rgb(d, C.navy);
-    const w = d.splitTextToSize(rec, W - 36);
-    d.text(w, 16, y + 14 + i * 14);
+    d.setFont('helvetica', 'bold'); d.setFontSize(10); rgb(d, C.goldLight);
+    d.text(`0${i+1}`, 20, y + 16 + i * 18);
+    d.setFont('helvetica', 'normal'); d.setFontSize(9); rgb(d, C.offWhite);
+    const w = d.splitTextToSize(rec, W - 40);
+    d.text(w, 32, y + 16 + i * 18);
   });
-  y += 58;
+  y += 78;
 
-  // 06 — AI INSIGHTS (if space remains)
-  if (insights.length > 0 && y < 225) {
-    y = secHead(d, '06   AI-GENERATED NARRATIVE INSIGHTS', y, C.sky);
+  if (insights.length > 0 && y < 220) {
+    y = secHead(d, '05. Automated Pattern Recognition', y, C.cyan);
     const cfg: Record<string, { c: [number,number,number]; lbl: string }> = {
-      positive: { c: C.green, lbl: '▲ POSITIVE' },
-      warning:  { c: C.red,   lbl: '▼ WARNING'  },
-      info:     { c: C.sky,   lbl: '● INSIGHT'  },
+      positive: { c: C.green, lbl: 'POSITIVE VARIANCE' },
+      warning:  { c: C.red,   lbl: 'RISK VECTOR'  },
+      info:     { c: C.cyan,  lbl: 'NEUTRAL INSIGHT'  },
     };
     insights.slice(0, 3).forEach(ins => {
       if (y > 260) return;
       const t = cfg[ins.type] ?? cfg.info;
-      fill(d, C.lightBg, 10, y, W - 20, 18);
-      d.setDrawColor(...C.border); d.rect(10, y, W - 20, 18, 'S');
-      fill(d, t.c, 10, y, 3, 18);
+      fill(d, C.bgCard, 12, y, W - 24, 20, 2);
+      fill(d, t.c, 12, y, 4, 20);
       d.setFont('helvetica', 'bold'); d.setFontSize(7); d.setTextColor(...t.c);
-      d.text(t.lbl, 16, y + 6);
-      d.setFont('helvetica', 'bold'); d.setFontSize(8); rgb(d, C.navy);
-      d.text(d.splitTextToSize(ins.title, W - 34)[0] ?? '', 16, y + 12);
-      d.setFont('helvetica', 'normal'); d.setFontSize(7); rgb(d, C.slate);
-      d.text(d.splitTextToSize(ins.description, W - 34)[0] ?? '', 16, y + 17);
-      y += 22;
+      d.text(t.lbl, 22, y + 7, { charSpace: 0.5 });
+      d.setFont('helvetica', 'bold'); d.setFontSize(9); rgb(d, C.offWhite);
+      d.text(d.splitTextToSize(ins.title.toUpperCase(), W - 38)[0] ?? '', 22, y + 12);
+      d.setFont('helvetica', 'normal'); d.setFontSize(8); rgb(d, C.slateLight);
+      d.text(d.splitTextToSize(ins.description, W - 38)[0] ?? '', 22, y + 17);
+      y += 24;
     });
   }
 }
 
 // ══════════════════════════════════════════════════════════════════
-// PAGE 4 — AI STRATEGY NARRATIVE (DYNAMIC)
+// PAGE 4 — LLM NARRATIVE
 // ══════════════════════════════════════════════════════════════════
 function drawAIStrategyPage(d: jsPDF, summary: string) {
   const W = d.internal.pageSize.getWidth();
   let y = 30;
 
-  y = secHead(d, '07   AI EXECUTIVE NARRATIVE & STRATEGIC ADVISORY', y, C.gold);
+  y = secHead(d, '06. Executive LLM Synthesis', y, C.gold);
 
-  fill(d, C.lightBg, 10, y, W - 20, 240);
-  d.setDrawColor(...C.border); d.rect(10, y, W - 20, 240, 'S');
-
-  d.setFont('helvetica', 'normal'); d.setFontSize(9); rgb(d, C.navy);
+  fill(d, C.bgCard, 12, y, W - 24, 230, 3);
   
-  // Format the text nicely
-  const lines = d.splitTextToSize(summary, W - 32);
-  let currentY = y + 14;
+  // Fancy quote mark
+  d.setFont('helvetica', 'bold'); d.setFontSize(60); rgb(d, C.border);
+  d.text('"', 20, y + 30);
+
+  d.setFont('helvetica', 'normal'); d.setFontSize(10); rgb(d, C.offWhite);
+  
+  const lines = d.splitTextToSize(summary, W - 40);
+  let currentY = y + 20;
   
   lines.forEach((line: string) => {
-    // Basic bold detection for markdown like **text**
     if (line.includes('**')) {
       const parts = line.split('**');
-      let currentX = 16;
+      let currentX = 22;
       parts.forEach((part, idx) => {
         d.setFont('helvetica', idx % 2 === 1 ? 'bold' : 'normal');
+        d.setTextColor(...(idx % 2 === 1 ? C.goldLight : C.offWhite));
         d.text(part, currentX, currentY);
         currentX += d.getTextWidth(part);
       });
     } else {
-      d.setFont('helvetica', 'normal');
-      d.text(line, 16, currentY);
+      d.setFont('helvetica', 'normal'); rgb(d, C.offWhite);
+      d.text(line, 22, currentY);
     }
-    currentY += 6;
+    currentY += 6.5;
   });
 }
 
@@ -436,37 +448,37 @@ export async function generateExecutiveReport(
   health: { score: number; label: string; color: string },
   options: ReportOptions = {}
 ): Promise<void> {
-  const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const file = info.filename || 'Dataset';
-  const now  = new Date().toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' });
+  const now = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }).toUpperCase();
   const logo = await loadLogo();
 
-  // Page 1 — Cover
-  await drawCover(doc, { ...options, filename: file, rows: info.rows, cols: info.columns.length, generatedAt: now });
+  // Page 1
+  await drawCover(doc, { ...options, filename: file.toUpperCase(), rows: info.rows, cols: info.columns.length, generatedAt: now });
 
-  // Page 2 — Executive Summary + Column Table
+  // Page 2
   doc.addPage();
-  fill(doc, C.white, 0, 0, 210, 297);
+  fill(doc, C.bgDark, 0, 0, 210, 297);
   drawPage2(doc, info, health);
 
-  // Page 3 — Anomalies + Decisions + Recommendations
+  // Page 3
   doc.addPage();
-  fill(doc, C.white, 0, 0, 210, 297);
+  fill(doc, C.bgDark, 0, 0, 210, 297);
   drawPage3(doc, info, health, options.insights ?? []);
 
-  // Page 4 — AI Strategy (Optional)
+  // Page 4 (Optional AI)
   if (options.aiSummary) {
     doc.addPage();
-    fill(doc, C.white, 0, 0, 210, 297);
+    fill(doc, C.bgDark, 0, 0, 210, 297);
     drawAIStrategyPage(doc, options.aiSummary);
   }
 
-  // Apply header/footer to pages 2+
+  // Apply Chrome
   const total = doc.getNumberOfPages();
   for (let p = 2; p <= total; p++) {
     doc.setPage(p);
-    pageChrome(doc, p, total, file, logo);
+    pageChrome(doc, p, total, file.toUpperCase(), logo);
   }
 
-  doc.save(`Kimit_Executive_Report_${file.replace(/[^a-z0-9_-]/gi, '_')}.pdf`);
+  doc.save(`KIMIT_EXECUTIVE_${file.replace(/[^a-z0-9_-]/gi, '_').toUpperCase()}.pdf`);
 }
