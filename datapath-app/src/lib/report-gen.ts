@@ -55,7 +55,7 @@ function drawHexagon(d: jsPDF, x: number, y: number, size: number, color: [numbe
   d.setFillColor(...color);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   d.setGState(new (d as any).GState({ opacity: alpha }));
-  const points = [];
+  const points: [number, number][] = [];
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI / 3) * i;
     points.push([x + size * Math.cos(angle), y + size * Math.sin(angle)]);
