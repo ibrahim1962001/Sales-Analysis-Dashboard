@@ -70,8 +70,7 @@ function pageChrome(d: jsPDF, page: number, total: number, filename: string, log
   const W = d.internal.pageSize.getWidth();
   const H = d.internal.pageSize.getHeight();
 
-  // Dark background for all pages
-  fill(d, C.bgDark, 0, 0, W, H);
+  // Background is already drawn before page content
 
   // Header
   fill(d, C.bgCard, 0, 0, W, 20);
