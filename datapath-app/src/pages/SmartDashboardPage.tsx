@@ -295,14 +295,14 @@ function treemapOpt(data: { name: string; value: number }[], color: string) {
 
 // ── KPI Card ─────────────────────────────────────────────────────
 const KpiCard: React.FC<{ title: string; value: string; sub: string; color: string; sparkVals: number[]; icon: string }> = ({ title, value, sub, color, sparkVals, icon }) => (
-  <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${color}22`, borderTop: `3px solid ${color}`, borderRadius: 16, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 160 }}>
+  <div className="sd-kpi-card" style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${color}22`, borderTop: `3px solid ${color}`, borderRadius: 16, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 160 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
-        <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{title}</div>
-        <div style={{ fontSize: 30, fontWeight: 900, color: '#f8fafc', lineHeight: 1 }}>{value}</div>
+        <div className="sd-kpi-title" style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{title}</div>
+        <div className="sd-kpi-value" style={{ fontSize: 30, fontWeight: 900, color: '#f8fafc', lineHeight: 1 }}>{value}</div>
         <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{sub}</div>
       </div>
-      <div style={{ fontSize: 28, lineHeight: 1 }}>{icon}</div>
+      <div className="sd-kpi-icon" style={{ fontSize: 28, lineHeight: 1 }}>{icon}</div>
     </div>
     <div style={{ marginTop: 4 }}><Sparkline vals={sparkVals} color={color} /></div>
   </div>
@@ -651,45 +651,42 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#070c18', padding: '0 0 40px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="sd-page" style={{ minHeight: '100vh', background: '#070c18', padding: '0 0 40px', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
       {/* ── Header ── */}
-      <div style={{ background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${meta.p}22`, padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div className="sd-header" style={{ background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${meta.p}22`, padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: 12 }}>
+        <div className="sd-header-left" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <button onClick={onBack} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', borderRadius: 8, padding: '7px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
             <ArrowLeft size={15} /> Back
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 22 }}>{meta.icon}</span>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc' }}>Smart Dashboard</div>
-              <div style={{ fontSize: 11, color: '#64748b' }}>{info.filename} • {info.rows.toLocaleString()} records</div>
+              <div className="sd-header-title" style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc' }}>Smart Dashboard</div>
+              <div className="sd-header-sub" style={{ fontSize: 11, color: '#64748b', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{info.filename} • {info.rows.toLocaleString()} records</div>
             </div>
           </div>
-          <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: `${meta.p}22`, color: meta.p, border: `1px solid ${meta.p}44` }}>
-            {meta.icon} {meta.label}
-          </span>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="sd-header-actions" style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setRefreshKey(k => k + 1)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-            <RefreshCw size={14} /> Refresh
+            <RefreshCw size={14} />
           </button>
-          <button onClick={() => exportToExcel(info.workData, `Dashboard_${info.filename}.xlsx`)} style={{ background: meta.p, border: 'none', color: '#000', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+          <button onClick={() => exportToExcel(info.workData, `Dashboard_${info.filename}.xlsx`)} style={{ background: meta.p, border: 'none', color: '#000', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
             <Download size={14} /> Export
           </button>
         </div>
       </div>
 
-      <div style={{ padding: '28px 28px 0' }}>
+      <div className="sd-body" style={{ padding: '28px 28px 0' }}>
 
         {/* ── KPI Strip ── */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div className="sd-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
           {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
         </div>
 
         {/* ── Auto Insights Row ── */}
         {insights.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+          <div className="sd-insights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
             {insights.map((ins, i) => (
               <div key={i} style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${ins.color}22`, borderLeft: `4px solid ${ins.color}`, borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{ins.icon}</span>
@@ -703,7 +700,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
         )}
 
         {/* ── Charts Grid ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: trendOpts ? '1fr 420px' : '1fr', gap: 20, marginBottom: 20 }}>
+        <div className="sd-charts-main" style={{ display: 'grid', gridTemplateColumns: trendOpts ? '1fr 420px' : '1fr', gap: 20, marginBottom: 20 }}>
 
           {/* Left Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -750,7 +747,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
 
         {/* ── Histogram + Multi-Metric Bar ── */}
         {/* ── Quality Grade Card ── */}
-        <div style={{ background: 'rgba(15,23,42,0.8)', border: `1px solid ${qualityGrade.gradeColor}33`, borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+        <div className="sd-quality-card" style={{ background: 'rgba(15,23,42,0.8)', border: `1px solid ${qualityGrade.gradeColor}33`, borderRadius: 16, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
           <div style={{ textAlign: 'center', minWidth: 100 }}>
             <div style={{ fontSize: 64, fontWeight: 900, color: qualityGrade.gradeColor, lineHeight: 1 }}>{qualityGrade.grade}</div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Quality Grade</div>
@@ -846,7 +843,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
 
         {/* ── Funnel + Waterfall Charts ── */}
         {(funnelChart || waterfallChart) && (
-          <div style={{ display: 'grid', gridTemplateColumns: funnelChart && waterfallChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+          <div className="sd-chart-pair" style={{ display: 'grid', gridTemplateColumns: funnelChart && waterfallChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
             {funnelChart && (
               <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>🔽 Funnel — Top {catCols[0]} by Count</div>
@@ -866,7 +863,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
 
         {/* ── Bubble Chart + Stacked Area ── */}
         {(bubbleChart || stackedAreaChart) && (
-          <div style={{ display: 'grid', gridTemplateColumns: bubbleChart && stackedAreaChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+          <div className="sd-chart-pair" style={{ display: 'grid', gridTemplateColumns: bubbleChart && stackedAreaChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
             {bubbleChart && (
               <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>🫧 Bubble Chart — 3-Variable Analysis</div>
@@ -887,7 +884,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
         {/* ── Histogram + Multi-Metric Bar ── */}
         {(histChart || multiBarChart) && (
 
-          <div style={{ display: 'grid', gridTemplateColumns: histChart && multiBarChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+          <div className="sd-chart-pair" style={{ display: 'grid', gridTemplateColumns: histChart && multiBarChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
             {histChart && numCols[0] && (
               <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>📊 Distribution — {numCols[0]}</div>
@@ -959,7 +956,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
 
         {/* ── Treemap + Correlation ── */}
         {(treemapChart || correlationChart) && (
-          <div style={{ display: 'grid', gridTemplateColumns: treemapChart && correlationChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+          <div className="sd-chart-pair" style={{ display: 'grid', gridTemplateColumns: treemapChart && correlationChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
             {treemapChart && (
               <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px 20px 14px' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>🗺️ Treemap — {catCols[0]} by {numCols[0]}</div>
@@ -1057,7 +1054,7 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
         )}
 
         {/* ── Top & Bottom 5 + Scatter ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: scatterChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
+        <div className="sd-chart-pair" style={{ display: 'grid', gridTemplateColumns: scatterChart ? '1fr 1fr' : '1fr', gap: 20, marginBottom: 20 }}>
           {numCols[0] && (
             <div style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, overflow: 'hidden' }}>
               <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 16 }}>
@@ -1153,6 +1150,36 @@ export const SmartDashboardPage: React.FC<Props> = ({ onBack }) => {
       {/* Global Styles */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        /* ── Smart Dashboard Mobile Overrides ── */
+        @media (max-width: 768px) {
+          .sd-page { padding: 0 0 24px !important; }
+          .sd-header { padding: 10px 14px !important; gap: 8px !important; position: sticky !important; top: 56px !important; }
+          .sd-header-left { gap: 8px !important; flex: 1; min-width: 0; }
+          .sd-header-title { font-size: 14px !important; }
+          .sd-header-sub { font-size: 10px !important; max-width: 140px !important; }
+          .sd-header-actions { gap: 6px !important; }
+          .sd-header-actions button { padding: 6px 10px !important; font-size: 12px !important; }
+          .sd-body { padding: 14px 12px 0 !important; }
+          .sd-kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-bottom: 16px !important; }
+          .sd-kpi-card { padding: 14px 14px !important; min-width: unset !important; }
+          .sd-kpi-value { font-size: 22px !important; }
+          .sd-kpi-icon { font-size: 20px !important; }
+          .sd-kpi-title { font-size: 9px !important; }
+          .sd-insights-grid { grid-template-columns: 1fr !important; gap: 10px !important; margin-bottom: 16px !important; }
+          .sd-charts-main { grid-template-columns: 1fr !important; gap: 14px !important; margin-bottom: 14px !important; }
+          .sd-chart-pair { grid-template-columns: 1fr !important; gap: 14px !important; margin-bottom: 14px !important; }
+          .sd-quality-card { flex-direction: column !important; gap: 14px !important; padding: 14px 14px !important; align-items: stretch !important; }
+          .sd-quality-card > div:nth-child(3) { grid-template-columns: 1fr 1fr 1fr !important; min-width: unset !important; }
+        }
+
+        @media (max-width: 480px) {
+          .sd-kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .sd-kpi-card { padding: 12px 10px !important; border-radius: 12px !important; }
+          .sd-kpi-value { font-size: 20px !important; }
+          .sd-kpi-icon { font-size: 18px !important; }
+          .sd-header { top: 56px !important; }
+        }
       `}</style>
     </div>
   );
