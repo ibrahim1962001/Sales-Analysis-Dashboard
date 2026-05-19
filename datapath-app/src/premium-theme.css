@@ -93,14 +93,14 @@ body::after {
     box-shadow: 0 24px 64px rgba(0,0,0,0.6), inset 1px 1px 0 rgba(255,255,255,0.06) !important;
     animation: slideInLeft 0.7s cubic-bezier(0.16,1,0.3,1) forwards !important;
   }
+  .ltr .sidebar { animation-name: slideInLeft !important; }
+  .rtl .sidebar {
+    animation: slideInRight 0.7s cubic-bezier(0.16,1,0.3,1) forwards !important;
+  }
 }
 @keyframes slideInLeft {
   from { transform: translateX(-120%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
-}
-.ltr .sidebar { animation-name: slideInLeft !important; }
-.rtl .sidebar {
-  animation: slideInRight 0.7s cubic-bezier(0.16,1,0.3,1) forwards !important;
 }
 @keyframes slideInRight {
   from { transform: translateX(120%); opacity: 0; }
